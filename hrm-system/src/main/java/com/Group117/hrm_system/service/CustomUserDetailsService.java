@@ -8,7 +8,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.crypto.password.PasswordEncoder; // Thêm dòng này
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -19,9 +18,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Autowired
     private TaiKhoanRepository repo;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder; // Tiêm bộ mã hóa vào đây
-
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         TaiKhoan tk = repo.findByUsername(username);
@@ -29,11 +25,15 @@ public class CustomUserDetailsService implements UserDetailsService {
         if (tk == null) {
             throw new UsernameNotFoundException("Không tìm thấy user: " + username);
         }
-        String fakeValidPassword = passwordEncoder.encode("123456");
 
+        // TRẢ VỀ USER CHUẨN:
         return new User(
                 tk.getUsername(),
-                fakeValidPassword,
+                tk.getPassword(), // Lấy pass hash từ DB, KHÔNG dùng "123456" cứng
+                tk.isTrangThaiTaiKhoan(), // enabled: true nếu tài khoản hoạt động
+                true, // accountNonExpired
+                true, // credentialsNonExpired
+                true, // accountNonLocked
                 Collections.singletonList(new SimpleGrantedAuthority(tk.getRole()))
         );
     }

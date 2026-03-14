@@ -1,4 +1,5 @@
 package com.Group117.hrm_system.Controller;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -7,11 +8,13 @@ public class LoginController {
 
     @GetMapping("/login")
     public String showLoginPage() {
-        return "login"; // Trả về file login.html
+        return "login"; // Trả về login.html
     }
 
     @GetMapping("/home")
     public String showHomePage() {
-        return "index"; // Bạn nên có 1 file index.html để sau khi login thành công sẽ vào đây
+        // Lưu ý: Với JWT, bạn sẽ dùng JavaScript ở trang này
+        // để gửi Token lên mỗi khi load dữ liệu.
+        return "index";
     }
 }
