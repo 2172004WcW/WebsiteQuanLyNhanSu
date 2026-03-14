@@ -1,10 +1,79 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Home Page</title>
+    <meta charset="UTF-8">
+    <title>Home Page - HRM System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-<h1>Chào mừng bạn đã đăng nhập thành công vào hệ thống HRM!</h1>
-<a href="/logout">Đăng xuất</a>
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-primary shadow">
+    <div class="container">
+        <span class="navbar-brand mb-0 h1">HRM System</span>
+        <button class="btn btn-danger btn-sm" onclick="logout()">Đăng xuất</button>
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <div class="card shadow p-4">
+        <h1 id="welcomeMessage">Đang tải dữ liệu...</h1>
+        <hr>
+        <div id="profileDetails" style="display: none;">
+            <p><strong>Mã nhân viên:</strong> <span id="empId"></span></p>
+            <p><strong>Họ và tên:</strong> <span id="empName"></span></p>
+            <p><strong>Email công việc:</strong> <span id="empEmail"></span></p>
+            <p><strong>Vai trò hệ thống:</strong> <span class="badge bg-success" id="empRole"></span></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. Kiểm tra xem đã đăng nhập chưa
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login'; // Không có token thì mời ra ngoài
+    }
+
+    // 2. Gọi API lấy thông tin Profile khi trang web load xong
+    async function loadProfile() {
+        try {
+            const response = await fetch('/api/profile/me', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token, // Đính kèm token vào Header
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const nv = await response.json();
+                const role = localStorage.getItem('role');
+
+                // Hiển thị dữ liệu lên giao diện
+                document.getElementById('welcomeMessage').innerText = "Chào mừng, " + nv.hoTen + "!";
+                document.getElementById('empId').innerText = nv.id;
+                document.getElementById('empName').innerText = nv.hoTen;
+                document.getElementById('empEmail').innerText = nv.emailCongViec;
+                document.getElementById('empRole').innerText = role;
+                document.getElementById('profileDetails').style.display = 'block';
+            } else {
+                // Nếu token hết hạn hoặc sai, bắt đăng nhập lại
+                logout();
+            }
+        } catch (error) {
+            console.error("Lỗi:", error);
+            logout();
+        }
+    }
+
+    // 3. Hàm đăng xuất
+    function logout() {
+        localStorage.clear(); // Xóa sạch token, role, username
+        window.location.href = '/login';
+    }
+
+    // Chạy hàm load thông tin
+    loadProfile();
+</script>
 </body>
 </html>

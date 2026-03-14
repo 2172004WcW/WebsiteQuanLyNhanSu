@@ -7,6 +7,7 @@
     <style>
         body { background-color: #f8f9fa; }
         .login-container { margin-top: 100px; max-width: 400px; }
+        #errorMessage { display: none; } /* Ẩn lỗi mặc định */
     </style>
 </head>
 <body>
@@ -16,23 +17,62 @@
             <h3>HRM LOGIN</h3>
         </div>
         <div class="card-body">
-            <div th:if="${param.error}" class="alert alert-danger">
+            <div id="errorMessage" class="alert alert-danger">
                 Sai tên đăng nhập hoặc mật khẩu!
             </div>
 
-            <form th:action="@{/login}" method="post">
+            <form id="loginForm">
                 <div class="mb-3">
                     <label class="form-label">Tên đăng nhập</label>
-                    <input type="text" name="username" class="form-control" required>
+                    <input type="text" id="username" class="form-control" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Mật khẩu</label>
-                    <input type="password" name="password" class="form-control" required>
+                    <input type="password" id="password" class="form-control" required>
                 </div>
                 <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
             </form>
+            <div class="mt-3 text-center">
+                <a href="#" class="text-decoration-none">Quên mật khẩu?</a>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault(); // Chặn load lại trang
+
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const errorDiv = document.getElementById('errorMessage');
+
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+
+                // 1. Lưu Token và Role vào LocalStorage
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('role', data.role);
+                localStorage.setItem('username', data.username);
+
+                // 2. Điều hướng dựa trên vai trò
+                alert("Đăng nhập thành công! Vai trò: " + data.role);
+                window.location.href = '/home'; // Hoặc phân loại /hr/home, /director/home...
+            } else {
+                errorDiv.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Lỗi kết nối:', error);
+            alert("Không thể kết nối tới máy chủ!");
+        }
+    });
+</script>
 </body>
 </html>
