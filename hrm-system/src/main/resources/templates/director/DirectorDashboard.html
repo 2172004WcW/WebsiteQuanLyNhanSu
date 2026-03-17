@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Director Dashboard — HRM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        :root{
+            --pri:#FF6B35;--pri-s:#FFF0EB;--pri-d:#e55a25;
+            --bg:#F4F6F9;--card:#fff;
+            --text:#1A1D23;--t2:#6B7280;--t3:#9CA3AF;
+            --bdr:#E9ECEF;
+            --ok:#10B981;--ok-s:#ECFDF5;
+            --warn:#F59E0B;--warn-s:#FFFBEB;
+            --err:#EF4444;--err-s:#FEF2F2;
+            --inf:#3B82F6;--inf-s:#EFF6FF;
+            --teal:#0D9488;
+            --f:'Nunito',sans-serif;
+            --sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+            --sh2:0 4px 16px rgba(0,0,0,.10);
+            --r:12px;--rs:8px;--sw:240px;
+        }
+        html,body{font-family:var(--f);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+
+        /* SIDEBAR */
+        .sb{position:fixed;top:0;left:0;width:var(--sw);height:100vh;background:var(--card);border-right:1px solid var(--bdr);display:flex;flex-direction:column;z-index:200;box-shadow:var(--sh)}
+        .sb-logo{display:flex;align-items:center;gap:10px;padding:20px 18px 18px;border-bottom:1px solid var(--bdr)}
+        .logo-ic{width:36px;height:36px;background:var(--pri);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff}
+        .logo-nm{font-size:16px;font-weight:800;letter-spacing:-.3px;color:var(--text)}
+        .logo-nm span{color:var(--pri)}
+        .sb-sec{padding:18px 12px 8px}
+        .sec-lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);padding:0 8px;margin-bottom:6px}
+        .nav-it{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--rs);color:var(--t2);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;text-decoration:none;margin-bottom:2px;position:relative}
+        .nav-it:hover{background:var(--pri-s);color:var(--pri)}
+        .nav-it.active{background:var(--pri-s);color:var(--pri)}
+        .nav-it.active::before{content:'';position:absolute;left:0;top:25%;bottom:25%;width:3px;background:var(--pri);border-radius:0 3px 3px 0}
+        .nav-ic{width:32px;height:32px;border-radius:var(--rs);display:flex;align-items:center;justify-content:center;font-size:14px;transition:background .15s;flex-shrink:0}
+        .nav-it.active .nav-ic,.nav-it:hover .nav-ic{background:rgba(255,107,53,.12)}
+        .nav-badge{margin-left:auto;background:var(--pri);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px}
+        .sb-foot{margin-top:auto;padding:14px 12px;border-top:1px solid var(--bdr)}
+        .uc{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--rs);background:var(--bg);cursor:pointer}
+        .uc:hover{background:var(--pri-s)}
+        .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--pri),#ff9a70);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+        .u-nm{font-size:13px;font-weight:700;color:var(--text)}
+        .u-rl{font-size:10px;font-weight:600;color:var(--pri);letter-spacing:.3px;text-transform:uppercase}
+
+        /* MAIN */
+        .main{margin-left:var(--sw);padding:0 28px 40px;min-height:100vh}
+
+        /* TOPBAR */
+        .topbar{display:flex;align-items:center;justify-content:space-between;padding:22px 0 20px;border-bottom:1px solid var(--bdr);margin-bottom:22px}
+        .bc{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t3);margin-bottom:4px}
+        .bc span{color:var(--t2)}
+        .bc .bca{color:var(--pri);font-weight:700}
+        .pg-title{font-size:20px;font-weight:800;letter-spacing:-.4px}
+        .hdr-acts{display:flex;align-items:center;gap:10px}
+        .btn-o{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1.5px solid var(--bdr);border-radius:var(--rs);background:#fff;font-family:var(--f);font-size:12px;font-weight:600;color:var(--t2);cursor:pointer;transition:all .15s}
+        .btn-o:hover{border-color:var(--pri);color:var(--pri)}
+        .btn-p{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:none;border-radius:var(--rs);background:var(--pri);font-family:var(--f);font-size:12px;font-weight:700;color:#fff;cursor:pointer;transition:background .15s}
+        .btn-p:hover{background:var(--pri-d)}
+
+        /* WELCOME */
+        .wlc{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 22px;margin-bottom:22px;box-shadow:var(--sh)}
+        .wlc-l{display:flex;align-items:center;gap:14px}
+        .wlc-av{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--pri),#ff9a70);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 4px 12px rgba(255,107,53,.28)}
+        .wlc-nm{font-size:16px;font-weight:800;letter-spacing:-.3px}
+        .wlc-sub{font-size:12px;color:var(--t2);margin-top:2px}
+        .wlc-sub strong{color:var(--pri);font-weight:700}
+
+        /* KPI GRID */
+        .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+        .kpi{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 20px;box-shadow:var(--sh);transition:box-shadow .2s,transform .2s;animation:fu .4s ease both}
+        .kpi:hover{box-shadow:var(--sh2);transform:translateY(-2px)}
+        .kpi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+        .kpi-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+        .tb{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:3px}
+        .tb-up{background:var(--ok-s);color:var(--ok)}
+        .tb-dn{background:var(--err-s);color:var(--err)}
+        .tb-nu{background:var(--warn-s);color:var(--warn)}
+        .kv{font-size:26px;font-weight:800;letter-spacing:-.8px;line-height:1;margin-bottom:5px}
+        .kl{font-size:12px;color:var(--t2);font-weight:600;margin-bottom:10px}
+        .kf{font-size:11px;color:var(--t3);padding-top:10px;border-top:1px solid var(--bdr);display:flex;align-items:center}
+        .kf a{color:var(--pri);font-weight:700;text-decoration:none;margin-left:auto}
+        .kf a:hover{text-decoration:underline}
+
+        /* CHARTS */
+        .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+        .cc{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:20px 22px;box-shadow:var(--sh);animation:fu .45s ease both}
+        .cc-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+        .cc-title{font-size:14px;font-weight:800;letter-spacing:-.2px}
+        .cc-sub{font-size:11px;color:var(--t3);margin-top:2px}
+        .flt{background:#fff;border:1.5px solid var(--bdr);color:var(--t2);font-family:var(--f);font-size:11px;font-weight:600;padding:5px 10px;border-radius:var(--rs);outline:none;cursor:pointer}
+        .flt:hover,.flt:focus{border-color:var(--pri);color:var(--pri)}
+        .stat-row{display:flex;gap:18px;padding:10px 0;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr);margin-bottom:14px}
+        .sv{font-size:17px;font-weight:800;letter-spacing:-.5px;line-height:1}
+        .sl{font-size:10px;font-weight:700;color:var(--t3);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+        .leg{display:flex;gap:14px;margin-top:10px;flex-wrap:wrap}
+        .li{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t2);font-weight:600}
+        .ld{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+        .ll{width:16px;height:3px;border-radius:2px;flex-shrink:0}
+        .lld{width:16px;height:0;border-top:2.5px dashed;flex-shrink:0}
+        .clg{display:flex;gap:12px;margin-top:10px}
+        .cli{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--t2)}
+        .cld{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+        .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 16px;color:var(--t3);gap:6px;min-height:175px}
+        .em-ic{font-size:28px;opacity:.45}
+        .em-tx{font-size:13px;font-weight:700}
+        .em-sb{font-size:11px;text-align:center;max-width:220px}
+
+        /* ANIM */
+        @keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .kpi:nth-child(1){animation-delay:.05s}
+        .kpi:nth-child(2){animation-delay:.10s}
+        .kpi:nth-child(3){animation-delay:.15s}
+        .kpi:nth-child(4){animation-delay:.20s}
+        .row2 .cc:nth-child(1){animation-delay:.25s}
+        .row2 .cc:nth-child(2){animation-delay:.30s}
+        .full-row .cc{animation-delay:.35s}
+
+        ::-webkit-scrollbar{width:4px;height:4px}
+        ::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:2px}
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sb">
+    <div class="sb-logo">
+        <div class="logo-ic">H</div>
+        <div class="logo-nm">HRM<span>System</span></div>
+    </div>
+    <div class="sb-sec">
+        <div class="sec-lbl">Main Menu</div>
+        <a class="nav-it active" href=th:href="@{/dashboard/director}">
+            <div class="nav-ic">📊</div>
+            Director Dashboard
+            <span class="nav-badge">Live</span>
+        </a>
+    </div>
+    <div class="sb-foot">
+        <div class="uc">
+            <div class="av">D</div>
+            <div>
+                <div class="u-nm" id="sb-username">Director</div>
+                <div class="u-rl">Director</div>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+        <div>
+            <div class="bc">🏠 › <span>Dashboard</span> › <span class="bca">Director Dashboard</span></div>
+            <div class="pg-title">Director Dashboard</div>
+        </div>
+        <div class="hdr-acts">
+            <button class="btn-o">📅 <span id="month-label">Tháng hiện tại</span></button>
+            <button class="btn-o">📤 Export</button>
+        </div>
+    </div>
+
+    <!-- Welcome -->
+    <div class="wlc">
+        <div class="wlc-l">
+            <div class="wlc-av">D</div>
+            <div>
+                <div class="wlc-nm">Xin chào, <span id="wlc-name">Director</span> 👋</div>
+                <div class="wlc-sub">
+                    Có <strong id="wb-pending">0</strong> đơn phép chờ xử lý &amp;
+                    <strong id="wb-payroll">0</strong> bảng lương chưa chốt
+                </div>
+            </div>
+        </div>
+        <div class="hdr-acts">
+            <button class="btn-o">🗓 Xem lịch</button>
+            <button class="btn-p">+ Yêu cầu mới</button>
+        </div>
+    </div>
+
+    <!-- KPI -->
+    <div class="kpi-grid">
+        <div class="kpi">
+            <div class="kpi-top">
+                <div class="kpi-icon" style="background:var(--pri-s)">👥</div>
+                <span class="tb tb-nu">— %</span>
+            </div>
+            <div class="kv" id="kpi-total">0</div>
+            <div class="kl">Tổng nhân viên</div>
+            <div class="kf">Đang hoạt động <a href="#">Xem tất cả →</a></div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-top">
+                <div class="kpi-icon" style="background:var(--ok-s)">🌱</div>
+                <span class="tb tb-up">Tháng này</span>
+            </div>
+            <div class="kv" style="color:var(--ok)" id="kpi-new">0</div>
+            <div class="kl">Nhân viên mới</div>
+            <div class="kf">So với đầu tháng <a href="#">Xem chi tiết →</a></div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-top">
+                <div class="kpi-icon" style="background:var(--warn-s)">📉</div>
+                <span class="tb tb-nu" id="kpi-turn-badge">0%</span>
+            </div>
+            <div class="kv" style="color:var(--warn)" id="kpi-turnover">0%</div>
+            <div class="kl">Tỉ lệ nghỉ việc</div>
+            <div class="kf">Tháng này <a href="#">Xem chi tiết →</a></div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-top">
+                <div class="kpi-icon" style="background:var(--inf-s)">🎯</div>
+                <span class="tb tb-up">Đang mở</span>
+            </div>
+            <div class="kv" style="color:var(--inf)" id="kpi-open">0</div>
+            <div class="kl">Vị trí tuyển dụng</div>
+            <div class="kf">Tin đang mở <a href="#">Xem tất cả →</a></div>
+        </div>
+    </div>
+
+    <!-- Widget 2 + 3 -->
+    <div class="row2">
+        <!-- Line chart: biến động nhân sự -->
+        <div class="cc">
+            <div class="cc-hd">
+                <div>
+                    <div class="cc-title">Biến động nhân sự</div>
+                    <div class="cc-sub">Tổng nhân viên &amp; mới vào — 6 tháng</div>
+                </div>
+                <button class="btn-o" style="font-size:11px;padding:5px 10px">📅 6 tháng</button>
+            </div>
+            <div class="stat-row">
+                <div><div class="sv" id="st-total">0</div><div class="sl">Hiện tại</div></div>
+                <div><div class="sv" style="color:var(--ok)" id="st-new">+0</div><div class="sl">Mới vào</div></div>
+                <div><div class="sv" style="color:var(--err)" id="st-left">−0</div><div class="sl">Nghỉ việc</div></div>
+            </div>
+            <div class="empty" id="trend-empty">
+                <div class="em-ic">📈</div>
+                <div class="em-tx">Chưa có dữ liệu nhân sự</div>
+                <div class="em-sb">Dữ liệu sẽ hiển thị sau khi module nhân viên hoàn thành</div>
+            </div>
+            <canvas id="chart-trend" height="175" style="display:none"></canvas>
+            <div class="leg">
+                <div class="li"><div class="ll" style="background:var(--pri)"></div>Tổng NV</div>
+                <div class="li"><div class="lld" style="border-color:var(--ok)"></div>Mới vào</div>
+            </div>
+        </div>
+
+        <!-- Bar chart: chuyên cần -->
+        <div class="cc">
+            <div class="cc-hd">
+                <div>
+                    <div class="cc-title">Chuyên cần theo phòng ban</div>
+                    <div class="cc-sub">% ngày có mặt / tổng ngày làm chuẩn</div>
+                </div>
+                <select class="flt" id="filter-month" onchange="reloadAtt(this.value)">
+                    <option value="3-2025">Tháng 3/2025</option>
+                    <option value="2-2025">Tháng 2/2025</option>
+                    <option value="1-2025">Tháng 1/2025</option>
+                    <option value="12-2024">Tháng 12/2024</option>
+                    <option value="11-2024">Tháng 11/2024</option>
+                </select>
+            </div>
+            <div class="empty" id="att-empty">
+                <div class="em-ic">📋</div>
+                <div class="em-tx">Chưa có dữ liệu chấm công</div>
+                <div class="em-sb">Dữ liệu sẽ hiển thị sau khi module chấm công hoàn thành</div>
+            </div>
+            <canvas id="chart-att" height="175" style="display:none"></canvas>
+            <div class="clg">
+                <div class="cli"><div class="cld" style="background:var(--ok)"></div>≥ 95% Tốt</div>
+                <div class="cli"><div class="cld" style="background:var(--warn)"></div>85–95% TB</div>
+                <div class="cli"><div class="cld" style="background:var(--err)"></div>&lt; 85% Yếu</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Widget 4: lương -->
+    <div class="full-row">
+        <div class="cc">
+            <div class="cc-hd">
+                <div>
+                    <div class="cc-title">Biến động quỹ lương</div>
+                    <div class="cc-sub">Tổng lương thực lĩnh toàn công ty (VNĐ) — 6 tháng gần nhất</div>
+                </div>
+                <div style="text-align:right">
+                    <div style="font-size:18px;font-weight:800;color:var(--pri);letter-spacing:-.5px" id="sal-total">0 đ</div>
+                    <div style="font-size:11px;color:var(--t3);margin-top:1px">Tháng hiện tại</div>
+                </div>
+            </div>
+            <div class="empty" id="sal-empty">
+                <div class="em-ic">💰</div>
+                <div class="em-tx">Chưa có dữ liệu lương</div>
+                <div class="em-sb">Dữ liệu sẽ hiển thị sau khi module tiền lương hoàn thành</div>
+            </div>
+            <canvas id="chart-sal" height="120" style="display:none"></canvas>
+            <div class="leg" style="margin-top:10px">
+                <div class="li"><div class="ll" style="background:var(--pri)"></div>Tổng quỹ lương</div>
+                <div class="li"><div class="lld" style="border-color:var(--teal)"></div>Trung bình / người</div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<script>
+    Chart.defaults.color       = '#9CA3AF';
+    Chart.defaults.borderColor = '#F3F4F6';
+    Chart.defaults.font.family = "'Nunito',sans-serif";
+    Chart.defaults.font.size   = 11;
+    Chart.defaults.font.weight = '600';
+
+    const vnd = v => {
+        if (!v) return '0 đ';
+        if (v >= 1e9) return (v/1e9).toFixed(2)+'B đ';
+        if (v >= 1e6) return (v/1e6).toFixed(0)+'M đ';
+        return v.toLocaleString('vi-VN')+' đ';
+    };
+
+    function renderKPI(d) {
+        document.getElementById('kpi-total').textContent    = (d.totalActive||0).toLocaleString('vi-VN');
+        document.getElementById('kpi-new').textContent      = '+'+(d.newThisMonth||0);
+        document.getElementById('kpi-turnover').textContent = (d.turnoverRate||0)+'%';
+        document.getElementById('kpi-turn-badge').textContent = (d.turnoverRate||0)+'%';
+        const tb = document.getElementById('kpi-turn-badge');
+        const tr = d.turnoverRate||0;
+        tb.className = 'tb '+(tr>5?'tb-dn':tr>2?'tb-nu':'tb-up');
+        if(d.pendingLeaves!=null) document.getElementById('wb-pending').textContent = d.pendingLeaves;
+        if(d.unclosedPayroll!=null) document.getElementById('wb-payroll').textContent = d.unclosedPayroll;
+    }
+
+    let trendCh=null;
+    function renderTrend(data) {
+        if (!data||!data.length) return;
+        const last = data[data.length-1];
+        document.getElementById('st-total').textContent = (last.totalActive||0).toLocaleString('vi-VN');
+        document.getElementById('st-new').textContent   = '+'+(last.newJoined||0);
+        document.getElementById('trend-empty').style.display = 'none';
+        document.getElementById('chart-trend').style.display = 'block';
+        if(trendCh) trendCh.destroy();
+        trendCh = new Chart(document.getElementById('chart-trend'),{
+            type:'line',
+            data:{
+                labels:data.map(d=>d.label),
+                datasets:[
+                    {label:'Tổng NV',data:data.map(d=>d.totalActive),
+                        borderColor:'#FF6B35',backgroundColor:'rgba(255,107,53,0.08)',
+                        borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#FF6B35',
+                        pointBorderColor:'#fff',pointBorderWidth:2,fill:true,tension:.4},
+                    {label:'Mới vào',data:data.map(d=>d.newJoined),
+                        borderColor:'#10B981',backgroundColor:'transparent',
+                        borderWidth:2,borderDash:[6,3],pointRadius:4,
+                        pointBackgroundColor:'#10B981',pointBorderColor:'#fff',pointBorderWidth:2,tension:.4},
+                ]
+            },
+            options:{responsive:true,maintainAspectRatio:false,
+                interaction:{mode:'index',intersect:false},
+                plugins:{legend:{display:false}},
+                scales:{
+                    x:{grid:{display:false},border:{display:false}},
+                    y:{grid:{color:'#F3F4F6'},border:{display:false},beginAtZero:false,ticks:{padding:8}}
+                }
+            }
+        });
+    }
+
+    let attCh=null;
+    function renderAtt(data) {
+        if (!data||!data.length) return;
+        document.getElementById('att-empty').style.display  = 'none';
+        document.getElementById('chart-att').style.display  = 'block';
+        if(attCh) attCh.destroy();
+        attCh = new Chart(document.getElementById('chart-att'),{
+            type:'bar',
+            data:{
+                labels:data.map(d=>d.departmentName),
+                datasets:[{
+                    data:data.map(d=>d.attendanceRate),
+                    backgroundColor:data.map(d=>d.attendanceRate>=95?'rgba(16,185,129,.85)':d.attendanceRate>=85?'rgba(245,158,11,.85)':'rgba(239,68,68,.85)'),
+                    borderRadius:6,borderSkipped:false
+                }]
+            },
+            options:{responsive:true,maintainAspectRatio:false,
+                plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.y}%`}}},
+                scales:{
+                    x:{grid:{display:false},border:{display:false}},
+                    y:{min:60,max:100,grid:{color:'#F3F4F6'},border:{display:false},ticks:{callback:v=>v+'%',padding:8}}
+                }
+            }
+        });
+    }
+    function reloadAtt(v) {
+        // Khi API sẵn: const[m,y]=v.split('-'); fetch rồi renderAtt
+        document.getElementById('att-empty').style.display = 'flex';
+        document.getElementById('chart-att').style.display = 'none';
+        if(attCh){attCh.destroy();attCh=null;}
+    }
+
+    function renderSalary(data) {
+        if (!data||!data.length||data.every(d=>!d.totalNetSalary)) return;
+        const last = data[data.length-1];
+        document.getElementById('sal-total').textContent = vnd(last.totalNetSalary);
+        document.getElementById('sal-empty').style.display = 'none';
+        document.getElementById('chart-sal').style.display  = 'block';
+        new Chart(document.getElementById('chart-sal'),{
+            type:'line',
+            data:{
+                labels:data.map(d=>d.label),
+                datasets:[
+                    {label:'Tổng quỹ lương',data:data.map(d=>d.totalNetSalary),
+                        borderColor:'#FF6B35',backgroundColor:'rgba(255,107,53,0.08)',
+                        borderWidth:2.5,fill:true,tension:.4,pointRadius:4,
+                        pointBackgroundColor:'#FF6B35',pointBorderColor:'#fff',pointBorderWidth:2},
+                    {label:'TB/người',data:data.map(d=>d.avgNetSalary),
+                        borderColor:'#0D9488',backgroundColor:'transparent',
+                        borderWidth:2,borderDash:[6,3],tension:.4,pointRadius:3,yAxisID:'y2'},
+                ]
+            },
+            options:{responsive:true,maintainAspectRatio:false,
+                interaction:{mode:'index',intersect:false},
+                plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${vnd(c.parsed.y)}`}}},
+                scales:{
+                    x:{grid:{display:false},border:{display:false}},
+                    y:{grid:{color:'#F3F4F6'},border:{display:false},ticks:{callback:v=>vnd(v),padding:8}},
+                    y2:{position:'right',display:false,grid:{drawOnChartArea:false}}
+                }
+            }
+        });
+    }
+
+    /* ── SET month label từ Thymeleaf hoặc JS fallback ── */
+    (function(){
+        const now = new Date();
+        const ml  = document.getElementById('month-label');
+        if(ml && ml.textContent.trim()==='Tháng hiện tại'){
+            ml.textContent = 'Tháng '+(now.getMonth()+1)+'/'+now.getFullYear();
+        }
+    })();
+
+    /* ══════════════════════════════════════════════════════
+       LIVE DATA — uncomment toàn bộ block khi API sẵn sàng
+       ══════════════════════════════════════════════════════
+    const TK = localStorage.getItem('token')||'';
+    const H  = {'Authorization':'Bearer '+TK};
+
+    document.addEventListener('DOMContentLoaded',async()=>{
+      const [kpiR,trendR,salR] = await Promise.all([
+        fetch('/api/dashboard/director/kpi',{headers:H}).then(r=>r.json()),
+        fetch('/api/dashboard/director/headcount-trend?months=6',{headers:H}).then(r=>r.json()),
+        fetch('/api/dashboard/director/salary-trend?months=6',{headers:H}).then(r=>r.json()),
+      ]);
+      if(kpiR.success)   renderKPI(kpiR.data);
+      if(trendR.success) renderTrend(trendR.data);
+      if(salR.success)   renderSalary(salR.data);
+
+      // Lấy tháng hiện tại cho attendance
+      const now = new Date();
+      const attR = await fetch(
+        `/api/dashboard/director/attendance-by-dept?month=${now.getMonth()+1}&year=${now.getFullYear()}`,
+        {headers:H}
+      ).then(r=>r.json());
+      if(attR.success) renderAtt(attR.data);
+    });
+    */
+</script>
+</body>
+</html>
