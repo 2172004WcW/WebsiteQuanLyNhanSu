@@ -121,7 +121,7 @@
         <!-- Body -->
         <div class="login-body">
 
-            <!-- Thông báo lỗi -->
+            <!-- Thông báo lỗi JS -->
             <div id="errorMessage" class="alert alert-danger mb-3"></div>
 
             <!-- Thông báo từ URL param (VD: ?error=unauthorized) -->
@@ -168,21 +168,21 @@
 
 <script>
     // ── Điều hướng theo role sau khi đăng nhập thành công ──
+    // Thứ tự cấp bậc: DIRECTOR > ADMIN > HR > EMPLOYEE
     const ROLE_ROUTES = {
-        'DIRECTOR':  '/dashboard/director',
-        'ADMIN':     '/dashboard/director',
-        'HR':        '/dashboard/hr',
-        'DEPT_HEAD': '/dashboard/dept-head',
-        'EMPLOYEE':  '/dashboard/employee'
+        'DIRECTOR': '/dashboard/director',  // Giám đốc — báo cáo chiến lược, read-only
+        'ADMIN':    '/dashboard/admin',     // Quản trị hệ thống — tài khoản, phân quyền
+        'HR':       '/dashboard/hr',        // Nhân sự — nghiệp vụ nhân sự toàn hệ thống
+        'EMPLOYEE': '/dashboard/employee'   // Nhân viên — tự phục vụ cá nhân
     };
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const username  = document.getElementById('username').value.trim();
-        const password  = document.getElementById('password').value;
-        const errorDiv  = document.getElementById('errorMessage');
-        const btnLogin  = document.getElementById('btnLogin');
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const errorDiv = document.getElementById('errorMessage');
+        const btnLogin = document.getElementById('btnLogin');
 
         // Reset lỗi cũ
         errorDiv.style.display = 'none';
@@ -207,7 +207,6 @@
             const data = await response.json();
 
             if (response.ok) {
-                alert("Đăng nhập thành công! Vai trò: " + data.role);
                 // ── Lưu token vào 2 nơi ──
 
                 // 1. localStorage — dùng cho Fetch/Axios API calls trong các page
@@ -215,7 +214,7 @@
                 localStorage.setItem('role',     data.role);
                 localStorage.setItem('username', data.username);
 
-                // 2. Cookie — browser tự gửi khi navigate URL
+                // 2. Cookie — browser tự gửi khi navigate URL (Thymeleaf pages)
                 //    Không đặt HttpOnly vì JS cần đọc được
                 //    SameSite=Strict: chống CSRF
                 //    Max-Age=86400: hết hạn sau 24 giờ (khớp với JWT TTL)
@@ -260,25 +259,26 @@
         });
     });
 
-    // Nếu đã có token hợp lệ trong localStorage → redirect luôn
+    // Nếu đã có token hợp lệ trong localStorage → redirect luôn, không cần login lại
     (function checkExistingSession() {
         const token = localStorage.getItem('token');
         const role  = localStorage.getItem('role');
         if (token && token !== 'null' && token !== 'undefined' && role) {
-            const destination = ROLE_ROUTES[role] || '/dashboard/employee';
-            // Kiểm tra token còn hạn trước khi redirect
             try {
-                const payload  = JSON.parse(atob(token.split('.')[1]));
+                const payload   = JSON.parse(atob(token.split('.')[1]));
                 const isExpired = payload.exp * 1000 < Date.now();
                 if (!isExpired) {
+                    const destination = ROLE_ROUTES[role] || '/dashboard/employee';
                     window.location.href = destination;
                 } else {
-                    // Token hết hạn → xóa khỏi storage
+                    // Token hết hạn → xóa storage và cookie
                     localStorage.clear();
                     document.cookie = 'jwt_token=; path=/; Max-Age=0';
                 }
-            } catch(e) {
+            } catch (e) {
+                // Token lỗi format → xóa
                 localStorage.clear();
+                document.cookie = 'jwt_token=; path=/; Max-Age=0';
             }
         }
     })();

@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>HR Dashboard — HRM Group 117</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+    <style>
+        /* ── CSS Variables (đồng bộ toàn bộ dashboard) ── */
+        :root {
+            --pri:    #FF6B35;
+            --pri-s:  #FFF0EB;
+            --pri-d:  #e55a25;
+            --bg:     #F4F6F9;
+            --card:   #fff;
+            --ok:     #10B981;
+            --ok-s:   #ECFDF5;
+            --warn:   #F59E0B;
+            --warn-s: #FFFBEB;
+            --err:    #EF4444;
+            --err-s:  #FEF2F2;
+            --inf:    #3B82F6;
+            --inf-s:  #EFF6FF;
+            --teal:   #0D9488;
+            --teal-s: #F0FDFA;
+            --purple: #8B5CF6;
+            --purple-s:#F5F3FF;
+            --txt:    #1F2937;
+            --txt2:   #6B7280;
+            --border: #E5E7EB;
+            --sidebar-w: 240px;
+            --header-h:  60px;
+            --radius: 12px;
+            --shadow: 0 2px 12px rgba(0,0,0,.07);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--bg); color: var(--txt);
+            min-height: 100vh; display: flex;
+        }
+
+        /* ══ SIDEBAR ══ */
+        .sidebar {
+            width: var(--sidebar-w); background: #fff;
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            position: fixed; top: 0; left: 0;
+            height: 100vh; z-index: 100;
+        }
+        .sidebar-logo {
+            height: var(--header-h);
+            display: flex; align-items: center; gap: 10px;
+            padding: 0 20px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+        }
+        .logo-icon {
+            width: 32px; height: 32px; background: var(--pri); border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: 800; font-size: 16px;
+        }
+        .sidebar-logo span { font-weight: 800; font-size: 17px; color: var(--txt); }
+        .sidebar-logo span em { color: var(--pri); font-style: normal; }
+
+        .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; }
+        .nav-section {
+            font-size: 10px; font-weight: 700; letter-spacing:.08em;
+            text-transform: uppercase; color: var(--txt2); padding: 10px 20px 4px;
+        }
+        .nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 20px; font-size: 13.5px; font-weight: 600; color: var(--txt2);
+            border-left: 3px solid transparent; text-decoration: none; transition: all .18s;
+        }
+        .nav-item i { width: 18px; text-align: center; font-size: 14px; }
+        .nav-item:hover { color: var(--pri); background: var(--pri-s); }
+        .nav-item.active { color: var(--pri); background: var(--pri-s); border-left-color: var(--pri); }
+        .nav-badge {
+            margin-left: auto; background: var(--pri); color: #fff;
+            font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 20px;
+        }
+        .sidebar-footer {
+            padding: 14px 20px; border-top: 1px solid var(--border);
+            display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+        }
+        .s-avatar {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: var(--purple-s);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; color: var(--purple); font-size: 13px;
+        }
+        .s-uname { font-size: 13px; font-weight: 700; color: var(--txt); }
+        .s-role  { font-size: 11px; color: var(--txt2); }
+        .logout-btn {
+            margin-left: auto; background: none; border: none;
+            cursor: pointer; color: var(--txt2); font-size: 15px; transition: color .18s;
+        }
+        .logout-btn:hover { color: var(--err); }
+
+        /* ══ MAIN ══ */
+        .main-wrap { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+        /* ══ TOPBAR ══ */
+        .topbar {
+            height: var(--header-h); background: #fff; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; padding: 0 24px; gap: 10px;
+            position: sticky; top: 0; z-index: 50;
+        }
+        .page-title { font-size: 16px; font-weight: 800; }
+        .sep { color: var(--txt2); font-size: 13px; }
+        .page-cur { font-size: 13px; color: var(--pri); font-weight: 600; }
+        .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+        .icon-btn {
+            width: 36px; height: 36px; background: var(--bg); border: none; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--txt2); font-size: 15px; cursor: pointer; position: relative; transition: all .18s;
+        }
+        .icon-btn:hover { background: var(--pri-s); color: var(--pri); }
+        .notif-dot {
+            position: absolute; top: 6px; right: 6px;
+            width: 7px; height: 7px; background: var(--err); border-radius: 50%; border: 1.5px solid #fff;
+        }
+        .t-avatar {
+            width: 36px; height: 36px; border-radius: 50%; background: var(--purple);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: 800; font-size: 13px; cursor: pointer;
+        }
+
+        /* ══ CONTENT ══ */
+        .page-content { padding: 24px; flex: 1; }
+
+        /* ══ HR BANNER ══ */
+        .hr-banner {
+            background: linear-gradient(135deg, var(--purple) 0%, #7c3aed 100%);
+            border-radius: var(--radius); padding: 22px 28px;
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 24px; position: relative; overflow: hidden;
+        }
+        .hr-banner::before {
+            content: ''; position: absolute; top: -40px; right: -20px;
+            width: 160px; height: 160px; background: rgba(255,255,255,.07); border-radius: 50%;
+        }
+        .hr-banner::after {
+            content: ''; position: absolute; bottom: -50px; right: 80px;
+            width: 110px; height: 110px; background: rgba(255,255,255,.04); border-radius: 50%;
+        }
+        .hb-left h2 { font-size: 19px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+        .hb-left p  { font-size: 13px; color: rgba(255,255,255,.8); font-weight: 500; }
+        .hb-date    { font-size: 12px; color: rgba(255,255,255,.7); margin-top: 8px; font-weight: 600; }
+        .hb-right { display: flex; gap: 10px; z-index: 1; }
+        .hb-pill {
+            display: flex; flex-direction: column; align-items: center;
+            background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25);
+            border-radius: 10px; padding: 10px 16px; min-width: 76px;
+        }
+        .hb-pill .num { font-size: 22px; font-weight: 800; color: #fff; line-height: 1; }
+        .hb-pill .lbl { font-size: 11px; color: rgba(255,255,255,.8); font-weight: 600; margin-top: 3px; text-align: center; }
+
+        /* ══ GRID ══ */
+        .g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+        .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+        .g3 { display: grid; grid-template-columns: 5fr 4fr; gap: 16px; margin-bottom: 24px; }
+
+        /* ══ CARD ══ */
+        .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; }
+        .card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .card-title { font-size: 14px; font-weight: 800; color: var(--txt); }
+        .card-link { font-size: 12px; font-weight: 600; color: var(--pri); text-decoration: none; }
+        .card-link:hover { text-decoration: underline; }
+
+        /* ══ KPI CARDS ══ */
+        .kpi-card {
+            background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+            padding: 18px 20px; display: flex; align-items: center; gap: 14px;
+        }
+        .kpi-icon {
+            width: 48px; height: 48px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; flex-shrink: 0;
+        }
+        .kpi-lbl { font-size: 12px; font-weight: 600; color: var(--txt2); margin-bottom: 3px; }
+        .kpi-val { font-size: 22px; font-weight: 800; color: var(--txt); line-height: 1.1; }
+        .kpi-sub { font-size: 11px; color: var(--txt2); margin-top: 4px; }
+        .badge {
+            display: inline-flex; align-items: center; gap: 3px;
+            font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+        }
+
+        /* ══ WIDGET 1: TO-DO LIST ══ */
+        .todo-list { display: flex; flex-direction: column; gap: 10px; }
+        .todo-item {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 16px; border-radius: 10px;
+            border: 1px solid var(--border);
+            transition: all .18s; cursor: pointer; text-decoration: none;
+        }
+        .todo-item:hover { border-color: var(--pri); background: var(--pri-s); }
+        .todo-item.urgent { border-left: 4px solid var(--err); }
+        .todo-item.warn   { border-left: 4px solid var(--warn); }
+        .todo-item.info   { border-left: 4px solid var(--inf); }
+        .todo-item.ok     { border-left: 4px solid var(--ok); }
+        .todo-icon {
+            width: 40px; height: 40px; border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; flex-shrink: 0;
+        }
+        .todo-content { flex: 1; }
+        .todo-title { font-size: 13.5px; font-weight: 700; color: var(--txt); margin-bottom: 2px; }
+        .todo-desc  { font-size: 12px; color: var(--txt2); }
+        .todo-count {
+            font-size: 22px; font-weight: 800; flex-shrink: 0;
+        }
+        .todo-arrow { color: var(--txt2); font-size: 13px; flex-shrink: 0; }
+
+        /* ══ DONUT CHART ══ */
+        .donut-wrap { position: relative; height: 200px; display: flex; align-items: center; justify-content: center; }
+        .donut-center {
+            position: absolute; text-align: center; pointer-events: none;
+        }
+        .donut-center .big { font-size: 26px; font-weight: 800; color: var(--txt); line-height: 1; }
+        .donut-center .sm  { font-size: 11px; color: var(--txt2); font-weight: 600; }
+        .donut-legend { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; }
+        .legend-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .legend-val  { margin-left: auto; font-weight: 800; color: var(--txt); }
+
+        /* filter */
+        .filter-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+        .filter-row label { font-size: 12px; font-weight: 600; color: var(--txt2); }
+        .filter-select {
+            font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 600; color: var(--txt);
+            border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px;
+            background: var(--bg); cursor: pointer; outline: none;
+        }
+        .filter-select:focus { border-color: var(--pri); }
+
+        /* ══ TOP 5 TABLE ══ */
+        .rank-table { width: 100%; border-collapse: collapse; }
+        .rank-table th {
+            font-size: 11px; font-weight: 700; color: var(--txt2);
+            text-transform: uppercase; letter-spacing:.04em;
+            padding: 8px 10px; text-align: left;
+            background: var(--bg); border-bottom: 1px solid var(--border);
+        }
+        .rank-table td {
+            padding: 10px; font-size: 13px;
+            border-bottom: 1px solid var(--border); vertical-align: middle;
+        }
+        .rank-table tr:last-child td { border-bottom: none; }
+        .rank-table tr:hover td { background: var(--bg); }
+        .rank-num {
+            width: 24px; height: 24px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 800;
+        }
+        .rank-1 { background: #FEF9C3; color: #92400E; }
+        .rank-2 { background: #F3F4F6; color: #374151; }
+        .rank-3 { background: #FEF3C7; color: #78350F; }
+        .rank-n { background: var(--bg); color: var(--txt2); }
+        .emp-cell { display: flex; align-items: center; gap: 9px; }
+        .emp-av {
+            width: 30px; height: 30px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 800; flex-shrink: 0;
+        }
+        .emp-name { font-weight: 700; font-size: 13px; color: var(--txt); }
+        .emp-dept { font-size: 11px; color: var(--txt2); }
+        .late-bar-wrap { width: 80px; background: var(--bg); border-radius: 20px; height: 6px; overflow: hidden; }
+        .late-bar { height: 100%; border-radius: 20px; background: var(--err); }
+
+        /* ══ PENDING LEAVE TABLE ══ */
+        .leave-table { width: 100%; border-collapse: collapse; }
+        .leave-table th {
+            font-size: 11px; font-weight: 700; color: var(--txt2);
+            text-transform: uppercase; letter-spacing:.04em;
+            padding: 8px 12px; text-align: left;
+            background: var(--bg); border-bottom: 1px solid var(--border);
+        }
+        .leave-table td {
+            padding: 11px 12px; font-size: 13px;
+            border-bottom: 1px solid var(--border); vertical-align: middle;
+        }
+        .leave-table tr:last-child td { border-bottom: none; }
+        .leave-table tr:hover td { background: var(--bg); }
+
+        .dept-tag {
+            display: inline-block; font-size: 10px; font-weight: 700;
+            padding: 2px 8px; border-radius: 20px;
+            background: var(--purple-s); color: var(--purple);
+        }
+        .leave-type-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .approval-step {
+            display: flex; flex-direction: column; gap: 2px; font-size: 11px;
+        }
+        .step { display: flex; align-items: center; gap: 4px; font-weight: 600; }
+        .step .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+        .st-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+        .st-ok   { background: var(--ok-s);   color: var(--ok); }
+        .st-warn { background: var(--warn-s); color: var(--warn); }
+        .st-err  { background: var(--err-s);  color: var(--err); }
+
+        .qa-approve, .qa-reject {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 5px 11px; border-radius: 6px;
+            font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 700;
+            border: none; cursor: pointer; transition: all .18s;
+        }
+        .qa-approve { background: var(--ok-s); color: var(--ok); }
+        .qa-approve:hover { background: var(--ok); color: #fff; }
+        .qa-reject  { background: var(--err-s); color: var(--err); }
+        .qa-reject:hover  { background: var(--err); color: #fff; }
+
+        /* ══ MODAL ══ */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,.35);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9000; opacity: 0; pointer-events: none; transition: opacity .2s;
+        }
+        .modal-overlay.show { opacity: 1; pointer-events: all; }
+        .modal-box {
+            background: #fff; border-radius: 14px; padding: 24px;
+            width: 420px; max-width: 92vw;
+            box-shadow: 0 8px 40px rgba(0,0,0,.18);
+            transform: translateY(12px); transition: transform .2s;
+        }
+        .modal-overlay.show .modal-box { transform: translateY(0); }
+        .modal-title { font-size: 15px; font-weight: 800; color: var(--txt); margin-bottom: 4px; }
+        .modal-sub   { font-size: 13px; color: var(--txt2); margin-bottom: 16px; }
+        .modal-label { font-size: 12px; font-weight: 700; color: var(--txt2); margin-bottom: 5px; }
+        .modal-textarea {
+            width: 100%; border: 1px solid var(--border); border-radius: 8px;
+            padding: 10px 12px; font-family: 'Nunito', sans-serif;
+            font-size: 13px; color: var(--txt); resize: vertical; min-height: 80px; outline: none;
+        }
+        .modal-textarea:focus { border-color: var(--purple); }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+        .btn-cancel {
+            padding: 8px 18px; border-radius: 7px; background: var(--bg); border: 1px solid var(--border);
+            font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700; color: var(--txt2); cursor: pointer;
+        }
+        .btn-cancel:hover { border-color: var(--txt2); }
+        .btn-confirm-reject {
+            padding: 8px 18px; border-radius: 7px; background: var(--err); border: none;
+            font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700; color: #fff; cursor: pointer;
+        }
+        .btn-confirm-reject:hover { background: #dc2626; }
+
+        /* ══ TOAST ══ */
+        .toast-wrap {
+            position: fixed; bottom: 24px; right: 24px;
+            display: flex; flex-direction: column; gap: 8px; z-index: 9999;
+        }
+        .toast {
+            display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 10px;
+            background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,.12);
+            font-size: 13.5px; font-weight: 600; animation: slideUp .3s ease; min-width: 260px;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+
+        @media (max-width: 1200px) { .g4 { grid-template-columns: repeat(2,1fr); } }
+        @media (max-width: 960px)  { .g3, .g2 { grid-template-columns: 1fr; } }
+        @media (max-width: 768px)  { .sidebar { display: none; } .main-wrap { margin-left: 0; } }
+    </style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">H</div>
+        <span>Smart<em>HRM</em></span>
+    </div>
+
+    <nav class="sidebar-nav">
+        <div class="nav-section">Menu chính</div>
+        <a class="nav-item active" href="#"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+        <a class="nav-item" href="#"><i class="fa-solid fa-users"></i> Nhân viên</a>
+        <a class="nav-item" href="#"><i class="fa-solid fa-building"></i> Phòng ban</a>
+        <a class="nav-item" href="#"><i class="fa-solid fa-clock"></i> Chấm công</a>
+        <a class="nav-item" href="#"><i class="fa-solid fa-calendar-xmark"></i> Duyệt nghỉ phép <span class="nav-badge">6</span></a>
+        <a class="nav-item" href="#"><i class="fa-solid fa-money-check-dollar"></i> Tiền lương</a>
+        <div class="nav-section">Tuyển dụng</div>
+        <a class="nav-item" href="#"><i class="fa-solid fa-briefcase"></i> Tin tuyển dụng</a>
+        <a class="nav-item" href="#"><i class="fa-solid fa-file-user"></i> CV ứng viên <span class="nav-badge">3</span></a>
+        <a class="nav-item" href="#"><i class="fa-solid fa-calendar-check"></i> Lịch phỏng vấn</a>
+        <div class="nav-section">Khác</div>
+        <a class="nav-item" href="#"><i class="fa-solid fa-right-left"></i> Điều chuyển NV</a>
+        <a class="nav-item" href="#"><i class="fa-solid fa-bell"></i> Thông báo <span class="nav-badge">2</span></a>
+        <a class="nav-item" href="#"><i class="fa-solid fa-envelope"></i> Email nội bộ</a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="s-avatar">NL</div>
+        <div>
+            <div class="s-uname">Nguyễn Thị L.</div>
+            <div class="s-role">HR · Toàn hệ thống</div>
+        </div>
+        <button class="logout-btn" title="Đăng xuất"><i class="fa-solid fa-right-from-bracket"></i></button>
+    </div>
+</aside>
+
+<!-- ═══ MAIN WRAP ═══ -->
+<div class="main-wrap">
+
+    <!-- Topbar -->
+    <header class="topbar">
+        <span class="page-title">Dashboard</span>
+        <span class="sep">/</span>
+        <span class="page-cur">HR Dashboard</span>
+        <div class="topbar-right">
+            <button class="icon-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+            <button class="icon-btn" onclick="toast('info','fa-bell','2 thông báo mới','Có đơn phép mới cần xử lý')">
+                <i class="fa-solid fa-bell"></i>
+                <span class="notif-dot"></span>
+            </button>
+            <div class="t-avatar">NL</div>
+        </div>
+    </header>
+
+    <main class="page-content">
+
+        <!-- ── HR Banner ── -->
+        <div class="hr-banner">
+            <div class="hb-left">
+                <h2><i class="fa-solid fa-shield-halved" style="margin-right:8px;opacity:.8"></i>HR Dashboard</h2>
+                <p>Quản lý toàn bộ hệ thống nhân sự — xem và xử lý dữ liệu mọi phòng ban</p>
+                <div class="hb-date" id="dateTime">...</div>
+            </div>
+            <div class="hb-right">
+                <div class="hb-pill">
+                    <div class="num">48</div>
+                    <div class="lbl">Tổng NV</div>
+                </div>
+                <div class="hb-pill">
+                    <div class="num" style="color:#c4b5fd">6</div>
+                    <div class="lbl">Phòng ban</div>
+                </div>
+                <div class="hb-pill">
+                    <div class="num" style="color:#fcd34d">6</div>
+                    <div class="lbl">Đơn chờ HR</div>
+                </div>
+                <div class="hb-pill">
+                    <div class="num" style="color:#6ee7b7">87%</div>
+                    <div class="lbl">Chuyên cần</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── KPI Cards ── -->
+        <div class="g4">
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:var(--warn-s);color:var(--warn)"><i class="fa-solid fa-file-circle-exclamation"></i></div>
+                <div>
+                    <div class="kpi-lbl">Đơn phép chờ HR duyệt</div>
+                    <div class="kpi-val">6</div>
+                    <div class="kpi-sub"><span class="badge" style="background:var(--err-s);color:var(--err)">Cần xử lý</span></div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:var(--err-s);color:var(--err)"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div>
+                    <div class="kpi-lbl">Chấm công thiếu dữ liệu</div>
+                    <div class="kpi-val">5</div>
+                    <div class="kpi-sub"><span class="badge" style="background:var(--warn-s);color:var(--warn)">tháng này</span></div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:var(--inf-s);color:var(--inf)"><i class="fa-solid fa-money-bill-wave"></i></div>
+                <div>
+                    <div class="kpi-lbl">Lương chưa chốt</div>
+                    <div class="kpi-val">12</div>
+                    <div class="kpi-sub"><span class="badge" style="background:var(--inf-s);color:var(--inf)">nhân viên</span></div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:var(--purple-s);color:var(--purple)"><i class="fa-solid fa-file-user"></i></div>
+                <div>
+                    <div class="kpi-lbl">CV ứng viên chờ duyệt</div>
+                    <div class="kpi-val">3</div>
+                    <div class="kpi-sub"><span class="badge" style="background:var(--purple-s);color:var(--purple)">tuyển dụng</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Row 2: To-do List | Donut Chart ── -->
+        <div class="g2">
+
+            <!-- Widget 1: To-do List -->
+            <div class="card">
+                <div class="card-hd">
+                    <div class="card-title"><i class="fa-solid fa-list-check" style="color:var(--purple);margin-right:6px"></i>Việc cần xử lý hôm nay</div>
+                    <span style="font-size:11px;color:var(--txt2);font-weight:600">Thứ Sáu, 20/03/2026</span>
+                </div>
+                <div class="todo-list">
+                    <a class="todo-item urgent" href="#">
+                        <div class="todo-icon" style="background:var(--err-s);color:var(--err)"><i class="fa-solid fa-calendar-xmark"></i></div>
+                        <div class="todo-content">
+                            <div class="todo-title">Đơn phép chờ HR duyệt</div>
+                            <div class="todo-desc">6 đơn đang chờ xác nhận từ HR — một số đã quá 24h</div>
+                        </div>
+                        <div class="todo-count" style="color:var(--err)">6</div>
+                        <div class="todo-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                    </a>
+                    <a class="todo-item warn" href="#">
+                        <div class="todo-icon" style="background:var(--warn-s);color:var(--warn)"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                        <div class="todo-content">
+                            <div class="todo-title">Chấm công thiếu dữ liệu</div>
+                            <div class="todo-desc">5 bản ghi ngày làm việc chưa có dữ liệu check-in/out</div>
+                        </div>
+                        <div class="todo-count" style="color:var(--warn)">5</div>
+                        <div class="todo-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                    </a>
+                    <a class="todo-item info" href="#">
+                        <div class="todo-icon" style="background:var(--inf-s);color:var(--inf)"><i class="fa-solid fa-money-check-dollar"></i></div>
+                        <div class="todo-content">
+                            <div class="todo-title">Lương tháng 3 chưa chốt</div>
+                            <div class="todo-desc">12 nhân viên chưa có phiếu lương tháng 03/2026</div>
+                        </div>
+                        <div class="todo-count" style="color:var(--inf)">12</div>
+                        <div class="todo-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                    </a>
+                    <a class="todo-item ok" href="#">
+                        <div class="todo-icon" style="background:var(--purple-s);color:var(--purple)"><i class="fa-solid fa-file-user"></i></div>
+                        <div class="todo-content">
+                            <div class="todo-title">CV ứng viên chờ sàng lọc</div>
+                            <div class="todo-desc">3 hồ sơ mới nộp cho vị trí Senior Backend, UI/UX</div>
+                        </div>
+                        <div class="todo-count" style="color:var(--purple)">3</div>
+                        <div class="todo-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Widget 2: Donut Chart chuyên cần -->
+            <div class="card">
+                <div class="card-hd">
+                    <div class="card-title"><i class="fa-solid fa-chart-pie" style="color:var(--ok);margin-right:6px"></i>Tỉ lệ chuyên cần toàn công ty</div>
+                </div>
+                <div class="filter-row">
+                    <label>Tháng:</label>
+                    <select class="filter-select" id="donutFilter" onchange="updateDonut()">
+                        <option value="3" selected>Tháng 3/2026</option>
+                        <option value="2">Tháng 2/2026</option>
+                        <option value="1">Tháng 1/2026</option>
+                        <option value="12">Tháng 12/2025</option>
+                    </select>
+                </div>
+                <div class="donut-wrap">
+                    <canvas id="donutChart" style="max-width:200px;max-height:200px"></canvas>
+                    <div class="donut-center">
+                        <div class="big" id="donutCenter">87%</div>
+                        <div class="sm">có mặt</div>
+                    </div>
+                </div>
+                <div class="donut-legend">
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:var(--ok)"></div>
+                        <span style="color:var(--txt2)">Có mặt đúng giờ</span>
+                        <span class="legend-val">67%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:var(--warn)"></div>
+                        <span style="color:var(--txt2)">Đi muộn</span>
+                        <span class="legend-val">20%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:var(--inf)"></div>
+                        <span style="color:var(--txt2)">Nghỉ có phép</span>
+                        <span class="legend-val">8%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:var(--err)"></div>
+                        <span style="color:var(--txt2)">Vắng không phép</span>
+                        <span class="legend-val">5%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Widget 3: Top 5 NV đi muộn nhất ── -->
+        <div class="card" style="margin-bottom:24px">
+            <div class="card-hd">
+                <div class="card-title"><i class="fa-solid fa-ranking-star" style="color:var(--warn);margin-right:6px"></i>Top 5 nhân viên đi muộn nhất tháng này</div>
+                <div class="filter-row" style="margin-bottom:0">
+                    <label>Tháng:</label>
+                    <select class="filter-select">
+                        <option>Tháng 3/2026</option>
+                        <option>Tháng 2/2026</option>
+                    </select>
+                </div>
+            </div>
+            <table class="rank-table">
+                <thead>
+                <tr>
+                    <th style="width:40px">Rank</th>
+                    <th>Nhân viên</th>
+                    <th>Phòng ban</th>
+                    <th>Số lần muộn</th>
+                    <th>Tổng phút muộn</th>
+                    <th>Tiền phạt</th>
+                    <th>Mức độ</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td><div class="rank-num rank-1">1</div></td>
+                    <td><div class="emp-cell"><div class="emp-av" style="background:var(--err-s);color:var(--err)">LC</div><div><div class="emp-name">Lê Văn C</div><div class="emp-dept">DevOps</div></div></div></td>
+                    <td><span class="dept-tag">IT</span></td>
+                    <td><strong style="color:var(--err)">8</strong> lần</td>
+                    <td>143 phút</td>
+                    <td style="color:var(--err);font-weight:700">400,000đ</td>
+                    <td><div class="late-bar-wrap"><div class="late-bar" style="width:100%"></div></div></td>
+                </tr>
+                <tr>
+                    <td><div class="rank-num rank-2">2</div></td>
+                    <td><div class="emp-cell"><div class="emp-av" style="background:var(--warn-s);color:var(--warn)">PT</div><div><div class="emp-name">Phạm Thị T</div><div class="emp-dept">Kế toán</div></div></div></td>
+                    <td><span class="dept-tag">Finance</span></td>
+                    <td><strong style="color:var(--warn)">6</strong> lần</td>
+                    <td>98 phút</td>
+                    <td style="color:var(--err);font-weight:700">300,000đ</td>
+                    <td><div class="late-bar-wrap"><div class="late-bar" style="width:75%"></div></div></td>
+                </tr>
+                <tr>
+                    <td><div class="rank-num rank-3">3</div></td>
+                    <td><div class="emp-cell"><div class="emp-av" style="background:var(--inf-s);color:var(--inf)">NH</div><div><div class="emp-name">Nguyễn V. H</div><div class="emp-dept">Marketing</div></div></div></td>
+                    <td><span class="dept-tag">MKT</span></td>
+                    <td><strong style="color:var(--warn)">5</strong> lần</td>
+                    <td>72 phút</td>
+                    <td style="color:var(--err);font-weight:700">250,000đ</td>
+                    <td><div class="late-bar-wrap"><div class="late-bar" style="width:62%"></div></div></td>
+                </tr>
+                <tr>
+                    <td><div class="rank-num rank-n">4</div></td>
+                    <td><div class="emp-cell"><div class="emp-av" style="background:var(--teal-s);color:var(--teal)">BM</div><div><div class="emp-name">Bùi Thị M</div><div class="emp-dept">Hành chính</div></div></div></td>
+                    <td><span class="dept-tag">HR</span></td>
+                    <td><strong style="color:var(--warn)">4</strong> lần</td>
+                    <td>55 phút</td>
+                    <td style="color:var(--err);font-weight:700">200,000đ</td>
+                    <td><div class="late-bar-wrap"><div class="late-bar" style="width:50%"></div></div></td>
+                </tr>
+                <tr>
+                    <td><div class="rank-num rank-n">5</div></td>
+                    <td><div class="emp-cell"><div class="emp-av" style="background:var(--pri-s);color:var(--pri)">TK</div><div><div class="emp-name">Trần Văn K</div><div class="emp-dept">Kinh doanh</div></div></div></td>
+                    <td><span class="dept-tag">Sales</span></td>
+                    <td><strong style="color:var(--ok)">3</strong> lần</td>
+                    <td>34 phút</td>
+                    <td style="color:var(--err);font-weight:700">150,000đ</td>
+                    <td><div class="late-bar-wrap"><div class="late-bar" style="width:37%"></div></div></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ── Widget 4: Đơn phép toàn hệ thống chờ HR duyệt ── -->
+        <div class="card" style="margin-bottom:24px">
+            <div class="card-hd">
+                <div class="card-title">
+                    <i class="fa-solid fa-file-circle-exclamation" style="color:var(--purple);margin-right:6px"></i>
+                    Đơn phép chờ HR duyệt (cấp 2)
+                    <span style="background:var(--err);color:#fff;font-size:10px;padding:1px 7px;border-radius:20px;margin-left:6px">6</span>
+                </div>
+                <a class="card-link" href="#">Xem tất cả</a>
+            </div>
+
+            <table class="leave-table">
+                <thead>
+                <tr>
+                    <th>Nhân viên</th>
+                    <th>Phòng ban</th>
+                    <th>Loại phép</th>
+                    <th>Thời gian</th>
+                    <th>Ngày</th>
+                    <th>Dept Head</th>
+                    <th>Thao tác HR</th>
+                </tr>
+                </thead>
+                <tbody id="hrLeaveBody">
+                <tr id="hr-row-1">
+                    <td><div class="emp-cell"><div class="emp-av" style="background:var(--ok-s);color:var(--ok)">NA</div><div><div class="emp-name">Nguyễn Văn A</div><div class="emp-dept">Frontend Dev</div></div></div></td>
+                    <td><span class="dept-tag">IT</span></td>
+                    <td><span class="leave-type-badge" style="background:var(--inf-s);color:var(--inf)">Phép năm</span></td>
+                    <td style="font-size:12px;color:var(--txt2)">25 → 26/03<br><strong style="color:var(--txt)">2 ngày</strong></td>
+                    <td style="font-size:12px;color:var(--txt2)">Nộp hôm nay</td>
+                    <td>
+                        <div class="approval-step">
+                            <div class="step"><div class="dot" style="background:var(--ok)"></div><span style="color:var(--ok)">Dept Head: Đã duyệt</span></div>
+                            <div class="step"><div class="dot" style="background:var(--warn)"></div><span style="color:var(--warn)">HR: Chờ duyệt</span></div>
+                        </div>
+                    </td>
+                    <td><div style="display:flex;gap:6px"><button class="qa-approve" onclick="hrApprove(1,'Nguyễn Văn A')"><i class="fa-solid fa-check"></i> Duyệt</button><button class="qa-reject" onclick="openRejectModal(1,'Nguyễn Văn A')"><i class="fa-solid fa-xmark"></i> Từ chối</button></div></td>
+                </tr>
+                <tr id="hr-row-2">
+                    <td><div class="emp-cell"><div class="emp-av" style="background:var(--warn-s);color:var(--warn)">PT</div><div><div class="emp-name">Phạm Thị T</div><div class="emp-dept">Kế toán</div></div></div></td>
+                    <td><span class="dept-tag">Finance</span></td>
+                    <td><span class="leave-type-badge" style="background:var(--err-s);color:var(--err)">Phép ốm</span></td>
+                    <td style="font-size:12px;color:var(--txt2)">22/03<br><strong style="color:var(--txt)">1 ngày</strong></td>
+                    <td style="font-size:12px;color:var(--txt2)">Hôm nay, 07:45</td>
+                    <td>
+                        <div class="approval-step">
+                            <div class="step"><div class="dot" style="background:var(--txt2)"></div><span style="color:var(--txt2)">Dept Head: Chưa duyệt</span></div>
+                            <div class="step"><div class="dot" style="background:var(--warn)"></div><span style="color:var(--warn)">HR: Override</span></div>
+                        </div>
+                    </td>
+                    <td><div style="display:flex;gap:6px"><button class="qa-approve" onclick="hrApprove(2,'Phạm Thị T')"><i class="fa-solid fa-check"></i> Duyệt</button><button class="qa-reject" onclick="openRejectModal(2,'Phạm Thị T')"><i class="fa-solid fa-xmark"></i> Từ chối</button></div></td>
+                </tr>
+                <tr id="hr-row-3">
+                    <td><div class="emp-cell"><div class="emp-av" style="background:var(--teal-s);color:var(--teal)">HE</div><div><div class="emp-name">Hoàng Văn E</div><div class="emp-dept">QA Engineer</div></div></div></td>
+                    <td><span class="dept-tag">IT</span></td>
+                    <td><span class="leave-type-badge" style="background:var(--inf-s);color:var(--inf)">Phép năm</span></td>
+                    <td style="font-size:12px;color:var(--txt2)">10 → 12/04<br><strong style="color:var(--txt)">3 ngày</strong></td>
+                    <td style="font-size:12px;color:var(--txt2)">Hôm qua</td>
+                    <td>
+                        <div class="approval-step">
+                            <div class="step"><div class="dot" style="background:var(--ok)"></div><span style="color:var(--ok)">Dept Head: Đã duyệt</span></div>
+                            <div class="step"><div class="dot" style="background:var(--warn)"></div><span style="color:var(--warn)">HR: Chờ duyệt</span></div>
+                        </div>
+                    </td>
+                    <td><div style="display:flex;gap:6px"><button class="qa-approve" onclick="hrApprove(3,'Hoàng Văn E')"><i class="fa-solid fa-check"></i> Duyệt</button><button class="qa-reject" onclick="openRejectModal(3,'Hoàng Văn E')"><i class="fa-solid fa-xmark"></i> Từ chối</button></div></td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div id="emptyHrLeave" style="display:none;text-align:center;padding:32px 0;color:var(--txt2)">
+                <i class="fa-solid fa-circle-check" style="font-size:32px;color:var(--ok);margin-bottom:10px;display:block"></i>
+                <div style="font-weight:700;font-size:14px">Không còn đơn nào chờ duyệt</div>
+                <div style="font-size:13px;margin-top:4px">Tất cả đơn phép đã được HR xử lý</div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- ═══ MODAL TỪ CHỐI ═══ -->
+<div class="modal-overlay" id="rejectModal">
+    <div class="modal-box">
+        <div class="modal-title"><i class="fa-solid fa-xmark-circle" style="color:var(--err);margin-right:7px"></i>Từ chối đơn phép (HR)</div>
+        <div class="modal-sub" id="rejectSub">Nhập lý do từ chối của <strong></strong></div>
+        <div class="modal-label">Lý do từ chối <span style="color:var(--err)">*</span></div>
+        <textarea class="modal-textarea" id="rejectReason" placeholder="Ví dụ: Quỹ phép đã hết, đề nghị nhân viên xem lại..."></textarea>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeRejectModal()">Hủy</button>
+            <button class="btn-confirm-reject" onclick="confirmReject()"><i class="fa-solid fa-xmark"></i> Xác nhận từ chối</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- ═══ SCRIPTS ═══ -->
+<script>
+    /* DateTime */
+    function tick() {
+        const d = new Date();
+        const days = ['Chủ nhật','Thứ hai','Thứ ba','Thứ tư','Thứ năm','Thứ sáu','Thứ bảy'];
+        document.getElementById('dateTime').textContent =
+            days[d.getDay()] + ', ' +
+            String(d.getDate()).padStart(2,'0') + '/' +
+            String(d.getMonth()+1).padStart(2,'0') + '/' +
+            d.getFullYear() + ' — ' +
+            String(d.getHours()).padStart(2,'0') + ':' +
+            String(d.getMinutes()).padStart(2,'0');
+    }
+    tick(); setInterval(tick, 1000);
+
+    /* ── Donut Chart ── */
+    const donutData = {
+        3:  { pct:'87%', vals:[67,20,8,5] },
+        2:  { pct:'83%', vals:[63,20,10,7] },
+        1:  { pct:'89%', vals:[70,19,7,4] },
+        12: { pct:'91%', vals:[74,17,6,3] },
+    };
+    const donutCtx = document.getElementById('donutChart').getContext('2d');
+    let donutChart = new Chart(donutCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Có mặt đúng giờ','Đi muộn','Nghỉ có phép','Vắng không phép'],
+            datasets: [{
+                data: donutData[3].vals,
+                backgroundColor: ['#10B981','#F59E0B','#3B82F6','#EF4444'],
+                borderWidth: 0,
+                hoverOffset: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '70%',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw}%` }
+                }
+            }
+        }
+    });
+
+    function updateDonut() {
+        const m = document.getElementById('donutFilter').value;
+        const d = donutData[m];
+        donutChart.data.datasets[0].data = d.vals;
+        donutChart.update();
+        document.getElementById('donutCenter').textContent = d.pct;
+    }
+
+    /* ── Toast ── */
+    const COLORS = { success:'var(--ok)', info:'var(--inf)', warn:'var(--warn)', err:'var(--err)' };
+    function toast(type, icon, title, msg) {
+        const w = document.getElementById('toastWrap');
+        const el = document.createElement('div');
+        el.className = 'toast';
+        el.innerHTML = `<i class="fa-solid ${icon}" style="color:${COLORS[type]};font-size:17px"></i>
+      <div><div style="font-weight:700;color:var(--txt)">${title}</div>
+      <div style="font-size:12px;color:var(--txt2)">${msg}</div></div>`;
+        w.appendChild(el);
+        setTimeout(() => el.remove(), 3500);
+    }
+
+    /* ── HR Approve ── */
+    let hrPendingCount = 3;
+    function hrApprove(id, name) {
+        const row = document.getElementById('hr-row-' + id);
+        if (!row) return;
+        row.querySelector('td:last-child').innerHTML =
+            '<span class="st-badge st-ok"><i class="fa-solid fa-check"></i> HR đã duyệt</span>';
+        setTimeout(() => {
+            row.style.transition = 'opacity .4s';
+            row.style.opacity = '0';
+            setTimeout(() => { row.remove(); hrPendingCount--; checkEmpty(); }, 400);
+        }, 1200);
+        toast('success','fa-circle-check','HR đã duyệt đơn phép',`Đơn của ${name} đã hoàn tất duyệt.`);
+    }
+
+    /* ── HR Reject Modal ── */
+    let rejectTargetId = null, rejectTargetName = '';
+    function openRejectModal(id, name) {
+        rejectTargetId = id; rejectTargetName = name;
+        document.getElementById('rejectSub').innerHTML = `Nhập lý do từ chối đơn phép của <strong>${name}</strong>`;
+        document.getElementById('rejectReason').value = '';
+        document.getElementById('rejectModal').classList.add('show');
+    }
+    function closeRejectModal() {
+        document.getElementById('rejectModal').classList.remove('show');
+        rejectTargetId = null;
+    }
+    function confirmReject() {
+        const reason = document.getElementById('rejectReason').value.trim();
+        if (!reason) {
+            document.getElementById('rejectReason').style.borderColor = 'var(--err)';
+            setTimeout(() => document.getElementById('rejectReason').style.borderColor = '', 1500);
+            return;
+        }
+        const row = document.getElementById('hr-row-' + rejectTargetId);
+        if (row) {
+            row.querySelector('td:last-child').innerHTML =
+                '<span class="st-badge st-err"><i class="fa-solid fa-xmark"></i> HR từ chối</span>';
+            setTimeout(() => {
+                row.style.transition = 'opacity .4s'; row.style.opacity = '0';
+                setTimeout(() => { row.remove(); hrPendingCount--; checkEmpty(); }, 400);
+            }, 1200);
+        }
+        toast('warn','fa-xmark-circle','HR đã từ chối đơn phép',`Đơn của ${rejectTargetName} bị từ chối.`);
+        closeRejectModal();
+    }
+    function checkEmpty() {
+        if (hrPendingCount <= 0)
+            document.getElementById('emptyHrLeave').style.display = 'block';
+    }
+    document.getElementById('rejectModal').addEventListener('click', function(e) {
+        if (e.target === this) closeRejectModal();
+    });
+</script>
+</body>
+</html>

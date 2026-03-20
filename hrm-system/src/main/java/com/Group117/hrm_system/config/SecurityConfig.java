@@ -18,11 +18,10 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.Group117.hrm_system.Repository.TaiKhoanRepository;
-import com.Group117.hrm_system.config.UpgradingDaoAuthenticationProvider;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // QUAN TRỌNG: Để dùng được @PreAuthorize trong Controller
+@EnableMethodSecurity // Bật @PreAuthorize / @RolesAllowed trong Controller & Service
 public class SecurityConfig {
 
     @Autowired
@@ -47,7 +46,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(UpgradingDaoAuthenticationProvider authProvider) {
+    public AuthenticationManager authenticationManager(
+            UpgradingDaoAuthenticationProvider authProvider) {
         return new ProviderManager(authProvider);
     }
 
@@ -55,45 +55,94 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+
+                // ── CORS ──────────────────────────────────────────────────
+                // Cho phép frontend (localhost:3000 / localhost:8080) gọi API
+                // Thêm domain production vào allowedOrigins khi deploy
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new org.springframework.web.cors.CorsConfiguration();
-                    config.setAllowedOrigins(java.util.List.of());
-                    config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    config.setAllowedHeaders(java.util.List.of());
+                    config.setAllowedOrigins(java.util.List.of(
+                            "http://localhost:8080",
+                            "http://localhost:3000",
+                            "http://127.0.0.1:8080"
+                    ));
+                    config.setAllowedMethods(java.util.List.of(
+                            "GET", "POST", "PUT", "DELETE", "OPTIONS"
+                    ));
+                    config.setAllowedHeaders(java.util.List.of("*"));
+                    config.setAllowCredentials(true); // Bắt buộc để gửi cookie JWT
                     return config;
                 }))
 
-                // xử lý các request bị từ chối truy cập (401)
+                // ── Exception Handling ────────────────────────────────────
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
-                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Chưa xác thực");
+                            // API call → trả 401 JSON
+                            // Page request → redirect login (xử lý bên Controller)
+                            if (request.getRequestURI().startsWith("/api/")) {
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Chưa xác thực");
+                            } else {
+                                response.sendRedirect("/login?error=unauthorized");
+                            }
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            if (request.getRequestURI().startsWith("/api/")) {
+                                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Không đủ quyền");
+                            } else {
+                                response.sendRedirect("/login?error=forbidden");
+                            }
                         })
                 )
 
+                // ── Session: Stateless (dùng JWT, không dùng session) ─────
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
+                // ── Authorization Rules ───────────────────────────────────
                 .authorizeHttpRequests(auth -> auth
+
+                        // Public: auth endpoints + static resources + trang login
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/login", "/", "/home",
-                                "/css/**", "/js/**", "/images/**", "/favicon.ico"
+                                "/css/**", "/js/**", "/images/**",
+                                "/webjars/**", "/favicon.ico"
                         ).permitAll()
 
+                        // Preflight OPTIONS — luôn permit
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Thymeleaf pages — permit để JwtFilter + Controller tự xử lý
-                        // Controller sẽ check token từ localStorage qua JS rồi redirect nếu không hợp lệ
+                        // ── Thymeleaf Dashboard Pages ─────────────────────────
+                        // Để permitAll ở tầng Security — việc kiểm tra JWT token
+                        // và phân quyền theo role do DashboardController tự xử lý
+                        // thông qua cookie "jwt_token".
+                        //
+                        // Lý do không dùng .hasRole() ở đây:
+                        //   • JWT được đọc từ Cookie, không phải Authorization header
+                        //   • JwtAuthenticationFilter inject SecurityContext nhưng
+                        //     role check tập trung tại Controller cho dễ debug
+                        //   • Nếu muốn enforce tại Security layer, dùng @PreAuthorize
+                        //     trong từng Controller method thay vì cấu hình ở đây
                         .requestMatchers("/dashboard/**").permitAll()
 
-                        // REST API — bắt buộc có JWT
+                        // ── REST API — bắt buộc có JWT hợp lệ ───────────────
+                        // Phân quyền chi tiết theo role dùng @PreAuthorize trong Controller:
+                        //
+                        //   DIRECTOR  → @PreAuthorize("hasRole('DIRECTOR')")
+                        //   ADMIN     → @PreAuthorize("hasRole('ADMIN')")
+                        //   HR        → @PreAuthorize("hasRole('HR')")
+                        //   EMPLOYEE  → @PreAuthorize("hasRole('EMPLOYEE')")
+                        //
+                        // Ví dụ dùng nhiều role:
+                        //   @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
                         .requestMatchers("/api/**").authenticated()
 
                         .anyRequest().authenticated()
                 )
 
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin Dashboard — HRM Group 117</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+    <style>
+        /* ── CSS Variables (đồng bộ toàn hệ thống) ── */
+        :root {
+            --pri:    #FF6B35;
+            --pri-s:  #FFF0EB;
+            --pri-d:  #e55a25;
+            --bg:     #F4F6F9;
+            --card:   #fff;
+            --ok:     #10B981;
+            --ok-s:   #ECFDF5;
+            --warn:   #F59E0B;
+            --warn-s: #FFFBEB;
+            --err:    #EF4444;
+            --err-s:  #FEF2F2;
+            --inf:    #3B82F6;
+            --inf-s:  #EFF6FF;
+            --teal:   #0D9488;
+            --teal-s: #F0FDFA;
+            /* Admin accent — slate/dark */
+            --adm:    #475569;
+            --adm-s:  #F1F5F9;
+            --adm-d:  #334155;
+            --txt:    #1F2937;
+            --txt2:   #6B7280;
+            --border: #E5E7EB;
+            --sidebar-w: 240px;
+            --header-h:  60px;
+            --radius: 12px;
+            --shadow: 0 2px 12px rgba(0,0,0,.07);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--bg); color: var(--txt);
+            min-height: 100vh; display: flex;
+        }
+
+        /* ══ SIDEBAR ══ */
+        .sidebar {
+            width: var(--sidebar-w); background: #fff;
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            position: fixed; top: 0; left: 0;
+            height: 100vh; z-index: 100;
+        }
+        .sidebar-logo {
+            height: var(--header-h);
+            display: flex; align-items: center; gap: 10px;
+            padding: 0 20px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+        }
+        .logo-icon {
+            width: 32px; height: 32px; background: var(--pri); border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: 800; font-size: 16px;
+        }
+        .sidebar-logo span { font-weight: 800; font-size: 17px; color: var(--txt); }
+        .sidebar-logo span em { color: var(--pri); font-style: normal; }
+
+        .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; }
+        .nav-section {
+            font-size: 10px; font-weight: 700; letter-spacing:.08em;
+            text-transform: uppercase; color: var(--txt2); padding: 10px 20px 4px;
+        }
+        .nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 20px; font-size: 13.5px; font-weight: 600; color: var(--txt2);
+            border-left: 3px solid transparent; text-decoration: none; transition: all .18s;
+        }
+        .nav-item i { width: 18px; text-align: center; font-size: 14px; }
+        .nav-item:hover { color: var(--pri); background: var(--pri-s); }
+        .nav-item.active { color: var(--pri); background: var(--pri-s); border-left-color: var(--pri); }
+        .nav-badge {
+            margin-left: auto; background: var(--err); color: #fff;
+            font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 20px;
+        }
+        .sidebar-footer {
+            padding: 14px 20px; border-top: 1px solid var(--border);
+            display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+        }
+        .s-avatar {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: var(--adm-s);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; color: var(--adm); font-size: 13px;
+        }
+        .s-uname { font-size: 13px; font-weight: 700; color: var(--txt); }
+        .s-role  { font-size: 11px; color: var(--txt2); }
+        .logout-btn {
+            margin-left: auto; background: none; border: none;
+            cursor: pointer; color: var(--txt2); font-size: 15px; transition: color .18s;
+        }
+        .logout-btn:hover { color: var(--err); }
+
+        /* ══ MAIN ══ */
+        .main-wrap { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+        /* ══ TOPBAR ══ */
+        .topbar {
+            height: var(--header-h); background: #fff; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; padding: 0 24px; gap: 10px;
+            position: sticky; top: 0; z-index: 50;
+        }
+        .page-title { font-size: 16px; font-weight: 800; }
+        .sep { color: var(--txt2); font-size: 13px; }
+        .page-cur { font-size: 13px; color: var(--pri); font-weight: 600; }
+        .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+        .icon-btn {
+            width: 36px; height: 36px; background: var(--bg); border: none; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--txt2); font-size: 15px; cursor: pointer; position: relative; transition: all .18s;
+        }
+        .icon-btn:hover { background: var(--pri-s); color: var(--pri); }
+        .notif-dot {
+            position: absolute; top: 6px; right: 6px;
+            width: 7px; height: 7px; background: var(--err); border-radius: 50%; border: 1.5px solid #fff;
+        }
+        .t-avatar {
+            width: 36px; height: 36px; border-radius: 50%; background: var(--adm);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: 800; font-size: 13px; cursor: pointer;
+        }
+
+        /* ══ CONTENT ══ */
+        .page-content { padding: 24px; flex: 1; }
+
+        /* ══ ADMIN BANNER ══ */
+        .admin-banner {
+            background: linear-gradient(135deg, var(--adm) 0%, var(--adm-d) 100%);
+            border-radius: var(--radius); padding: 22px 28px;
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 24px; position: relative; overflow: hidden;
+        }
+        .admin-banner::before {
+            content: ''; position: absolute; top: -40px; right: -20px;
+            width: 160px; height: 160px; background: rgba(255,255,255,.06); border-radius: 50%;
+        }
+        .admin-banner::after {
+            content: ''; position: absolute; bottom: -50px; right: 80px;
+            width: 110px; height: 110px; background: rgba(255,255,255,.04); border-radius: 50%;
+        }
+        .ab-left h2 { font-size: 19px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+        .ab-left p  { font-size: 13px; color: rgba(255,255,255,.75); font-weight: 500; }
+        .ab-date    { font-size: 12px; color: rgba(255,255,255,.6); margin-top: 8px; font-weight: 600; }
+        .ab-right { display: flex; gap: 10px; z-index: 1; }
+        .ab-pill {
+            display: flex; flex-direction: column; align-items: center;
+            background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+            border-radius: 10px; padding: 10px 16px; min-width: 76px;
+        }
+        .ab-pill .num { font-size: 22px; font-weight: 800; color: #fff; line-height: 1; }
+        .ab-pill .lbl { font-size: 11px; color: rgba(255,255,255,.75); font-weight: 600; margin-top: 3px; text-align: center; }
+
+        /* ══ GRID ══ */
+        .g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+        .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+        .g3 { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; margin-bottom: 24px; }
+
+        /* ══ CARD ══ */
+        .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; }
+        .card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .card-title { font-size: 14px; font-weight: 800; color: var(--txt); }
+        .card-link { font-size: 12px; font-weight: 600; color: var(--pri); text-decoration: none; }
+        .card-link:hover { text-decoration: underline; }
+
+        /* ══ KPI CARDS ══ */
+        .kpi-card {
+            background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+            padding: 18px 20px; display: flex; align-items: center; gap: 14px;
+        }
+        .kpi-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .kpi-lbl { font-size: 12px; font-weight: 600; color: var(--txt2); margin-bottom: 3px; }
+        .kpi-val { font-size: 22px; font-weight: 800; color: var(--txt); line-height: 1.1; }
+        .kpi-sub { font-size: 11px; color: var(--txt2); margin-top: 4px; }
+        .badge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+
+        /* ══ ACCOUNT TABLE (Widget 2) ══ */
+        .search-bar {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+        }
+        .search-input {
+            flex: 1; padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px;
+            font-family: 'Nunito', sans-serif; font-size: 13px; color: var(--txt);
+            background: var(--bg); outline: none;
+        }
+        .search-input:focus { border-color: var(--adm); }
+        .filter-select {
+            font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 600; color: var(--txt);
+            border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px;
+            background: var(--bg); cursor: pointer; outline: none;
+        }
+        .filter-select:focus { border-color: var(--adm); }
+        .btn-add {
+            display: flex; align-items: center; gap: 7px;
+            padding: 8px 16px; border-radius: 8px;
+            background: var(--adm); color: #fff;
+            font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700;
+            border: none; cursor: pointer; transition: all .18s; white-space: nowrap;
+        }
+        .btn-add:hover { background: var(--adm-d); }
+
+        .acc-table { width: 100%; border-collapse: collapse; }
+        .acc-table th {
+            font-size: 11px; font-weight: 700; color: var(--txt2);
+            text-transform: uppercase; letter-spacing:.04em;
+            padding: 8px 12px; text-align: left;
+            background: var(--bg); border-bottom: 1px solid var(--border);
+        }
+        .acc-table td {
+            padding: 11px 12px; font-size: 13px;
+            border-bottom: 1px solid var(--border); vertical-align: middle;
+        }
+        .acc-table tr:last-child td { border-bottom: none; }
+        .acc-table tr:hover td { background: var(--adm-s); }
+
+        .acc-cell { display: flex; align-items: center; gap: 9px; }
+        .acc-av {
+            width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 800; flex-shrink: 0;
+        }
+        .acc-username { font-weight: 700; font-size: 13px; color: var(--txt); }
+        .acc-id       { font-size: 11px; color: var(--txt2); }
+
+        .role-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+        .role-director { background: var(--pri-s);  color: var(--pri); }
+        .role-hr       { background: var(--inf-s);   color: var(--inf); }
+        .role-employee { background: var(--ok-s);    color: var(--ok); }
+        .role-admin    { background: var(--adm-s);   color: var(--adm); }
+
+        .status-toggle {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 12px; font-weight: 700; cursor: pointer;
+            padding: 4px 10px; border-radius: 20px; border: none;
+            font-family: 'Nunito', sans-serif; transition: all .18s;
+        }
+        .status-on  { background: var(--ok-s);  color: var(--ok); }
+        .status-off { background: var(--err-s); color: var(--err); }
+
+        .action-btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; border-radius: 6px; border: none;
+            cursor: pointer; font-size: 13px; transition: all .18s;
+        }
+        .btn-reset  { background: var(--warn-s); color: var(--warn); }
+        .btn-reset:hover  { background: var(--warn); color: #fff; }
+        .btn-role   { background: var(--inf-s);  color: var(--inf); }
+        .btn-role:hover   { background: var(--inf);  color: #fff; }
+        .btn-assign { background: var(--teal-s); color: var(--teal); }
+        .btn-assign:hover { background: var(--teal); color: #fff; }
+        .btn-delete { background: var(--err-s);  color: var(--err); }
+        .btn-delete:hover { background: var(--err);  color: #fff; }
+
+        /* ══ LOG TABLE (Widget 3) ══ */
+        .log-list { display: flex; flex-direction: column; gap: 8px; }
+        .log-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 12px; border-radius: 8px; background: var(--bg);
+        }
+        .log-icon {
+            width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; font-size: 13px;
+        }
+        .log-user  { font-size: 13px; font-weight: 700; color: var(--txt); }
+        .log-meta  { font-size: 11px; color: var(--txt2); margin-top: 2px; }
+        .log-time  { margin-left: auto; font-size: 11px; color: var(--txt2); white-space: nowrap; }
+
+        /* ══ UNASSIGNED LIST (Widget 4) ══ */
+        .unassigned-list { display: flex; flex-direction: column; gap: 8px; }
+        .unassigned-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 11px 14px; border-radius: 8px;
+            border: 1px dashed var(--border);
+            transition: all .18s;
+        }
+        .unassigned-item:hover { border-color: var(--adm); background: var(--adm-s); }
+        .ua-av {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: var(--adm-s); color: var(--adm);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 800; flex-shrink: 0;
+        }
+        .ua-name { font-size: 13px; font-weight: 700; color: var(--txt); }
+        .ua-role { font-size: 11px; color: var(--txt2); margin-top: 2px; }
+        .ua-select {
+            margin-left: auto; font-family: 'Nunito', sans-serif;
+            font-size: 12px; font-weight: 600; color: var(--txt);
+            border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px;
+            background: #fff; cursor: pointer; outline: none; max-width: 160px;
+        }
+        .btn-assign-small {
+            padding: 5px 12px; border-radius: 6px;
+            background: var(--adm); color: #fff;
+            font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 700;
+            border: none; cursor: pointer; transition: all .18s; white-space: nowrap;
+        }
+        .btn-assign-small:hover { background: var(--adm-d); }
+
+        /* ══ MODAL ══ */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,.35);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9000; opacity: 0; pointer-events: none; transition: opacity .2s;
+        }
+        .modal-overlay.show { opacity: 1; pointer-events: all; }
+        .modal-box {
+            background: #fff; border-radius: 14px; padding: 24px;
+            width: 440px; max-width: 92vw;
+            box-shadow: 0 8px 40px rgba(0,0,0,.18);
+            transform: translateY(12px); transition: transform .2s;
+        }
+        .modal-overlay.show .modal-box { transform: translateY(0); }
+        .modal-title { font-size: 15px; font-weight: 800; color: var(--txt); margin-bottom: 16px; }
+        .form-row { margin-bottom: 13px; }
+        .form-label { font-size: 12px; font-weight: 700; color: var(--txt2); margin-bottom: 5px; display: block; }
+        .form-input, .form-select {
+            width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px;
+            font-family: 'Nunito', sans-serif; font-size: 13px; color: var(--txt);
+            outline: none; background: var(--bg);
+        }
+        .form-input:focus, .form-select:focus { border-color: var(--adm); background: #fff; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+        .btn-cancel {
+            padding: 8px 18px; border-radius: 7px; background: var(--bg); border: 1px solid var(--border);
+            font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700; color: var(--txt2); cursor: pointer;
+        }
+        .btn-cancel:hover { border-color: var(--txt2); }
+        .btn-submit {
+            padding: 8px 20px; border-radius: 7px; background: var(--adm); border: none;
+            font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700; color: #fff; cursor: pointer;
+        }
+        .btn-submit:hover { background: var(--adm-d); }
+
+        /* ══ TOAST ══ */
+        .toast-wrap { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 9999; }
+        .toast {
+            display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 10px;
+            background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,.12);
+            font-size: 13.5px; font-weight: 600; animation: slideUp .3s ease; min-width: 260px;
+        }
+        @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+
+        @media (max-width: 1200px) { .g4 { grid-template-columns: repeat(2,1fr); } }
+        @media (max-width: 960px)  { .g3, .g2 { grid-template-columns: 1fr; } }
+        @media (max-width: 768px)  { .sidebar { display:none; } .main-wrap { margin-left:0; } }
+    </style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">H</div>
+        <span>Smart<em>HRM</em></span>
+    </div>
+
+    <nav class="sidebar-nav">
+        <div class="nav-section">Quản trị hệ thống</div>
+        <a class="nav-item active" href="#"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+        <a class="nav-item" href="#"><i class="fa-solid fa-users-gear"></i> Quản lý tài khoản</a>
+        <a class="nav-item" href="#"><i class="fa-solid fa-user-shield"></i> Phân quyền</a>
+        <a class="nav-item" href="#"><i class="fa-solid fa-link-slash"></i> TK chưa gán NV <span class="nav-badge">3</span></a>
+        <div class="nav-section">Hệ thống</div>
+        <a class="nav-item" href="#"><i class="fa-solid fa-clock-rotate-left"></i> Log đăng nhập</a>
+        <a class="nav-item" href="#"><i class="fa-solid fa-key"></i> Reset mật khẩu</a>
+        <a class="nav-item" href="#"><i class="fa-solid fa-bell"></i> Thông báo</a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="s-avatar">AD</div>
+        <div>
+            <div class="s-uname">Admin System</div>
+            <div class="s-role">Admin · Quản trị viên</div>
+        </div>
+        <button class="logout-btn" title="Đăng xuất"><i class="fa-solid fa-right-from-bracket"></i></button>
+    </div>
+</aside>
+
+<!-- ═══ MAIN WRAP ═══ -->
+<div class="main-wrap">
+
+    <!-- Topbar -->
+    <header class="topbar">
+        <span class="page-title">Dashboard</span>
+        <span class="sep">/</span>
+        <span class="page-cur">Admin Dashboard</span>
+        <div class="topbar-right">
+            <button class="icon-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+            <button class="icon-btn" onclick="toast('info','fa-bell','Hệ thống bình thường','Không có cảnh báo mới')">
+                <i class="fa-solid fa-bell"></i>
+            </button>
+            <div class="t-avatar">AD</div>
+        </div>
+    </header>
+
+    <main class="page-content">
+
+        <!-- ── Admin Banner ── -->
+        <div class="admin-banner">
+            <div class="ab-left">
+                <h2><i class="fa-solid fa-screwdriver-wrench" style="margin-right:8px;opacity:.8"></i>System Admin Dashboard</h2>
+                <p>Quản trị tài khoản & phân quyền — không can thiệp vào nghiệp vụ nhân sự</p>
+                <div class="ab-date" id="dateTime">...</div>
+            </div>
+            <div class="ab-right">
+                <div class="ab-pill">
+                    <div class="num">7</div>
+                    <div class="lbl">Tổng TK</div>
+                </div>
+                <div class="ab-pill">
+                    <div class="num" style="color:#86efac">6</div>
+                    <div class="lbl">Đang HĐ</div>
+                </div>
+                <div class="ab-pill">
+                    <div class="num" style="color:#fca5a5">1</div>
+                    <div class="lbl">Bị khóa</div>
+                </div>
+                <div class="ab-pill">
+                    <div class="num" style="color:#fcd34d">3</div>
+                    <div class="lbl">Chưa gán NV</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Widget 1: KPI Cards ── -->
+        <div class="g4">
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:var(--adm-s);color:var(--adm)"><i class="fa-solid fa-users"></i></div>
+                <div>
+                    <div class="kpi-lbl">Tổng tài khoản</div>
+                    <div class="kpi-val">7</div>
+                    <div class="kpi-sub"><span class="badge" style="background:var(--ok-s);color:var(--ok)">6 đang hoạt động</span></div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:var(--err-s);color:var(--err)"><i class="fa-solid fa-lock"></i></div>
+                <div>
+                    <div class="kpi-lbl">Tài khoản bị khóa</div>
+                    <div class="kpi-val">1</div>
+                    <div class="kpi-sub"><span class="badge" style="background:var(--err-s);color:var(--err)">Cần xem xét</span></div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:var(--warn-s);color:var(--warn)"><i class="fa-solid fa-link-slash"></i></div>
+                <div>
+                    <div class="kpi-lbl">Chưa gán nhân viên</div>
+                    <div class="kpi-val">3</div>
+                    <div class="kpi-sub"><span class="badge" style="background:var(--warn-s);color:var(--warn)">Cần gán NV</span></div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:var(--ok-s);color:var(--ok)"><i class="fa-solid fa-user-plus"></i></div>
+                <div>
+                    <div class="kpi-lbl">Tạo mới tháng này</div>
+                    <div class="kpi-val">4</div>
+                    <div class="kpi-sub"><span class="badge" style="background:var(--ok-s);color:var(--ok)">tháng 3/2026</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Widget 2: Quản lý tài khoản ── -->
+        <div class="card" style="margin-bottom:24px">
+            <div class="card-hd">
+                <div class="card-title"><i class="fa-solid fa-users-gear" style="color:var(--adm);margin-right:6px"></i>Quản lý tài khoản</div>
+                <button class="btn-add" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Tạo tài khoản</button>
+            </div>
+
+            <!-- Search + Filter -->
+            <div class="search-bar">
+                <input class="search-input" type="text" placeholder="Tìm theo username, mã tài khoản..."/>
+                <select class="filter-select">
+                    <option value="">Tất cả role</option>
+                    <option>DIRECTOR</option>
+                    <option>ADMIN</option>
+                    <option>HR</option>
+                    <option>EMPLOYEE</option>
+                </select>
+                <select class="filter-select">
+                    <option value="">Tất cả trạng thái</option>
+                    <option>Hoạt động</option>
+                    <option>Bị khóa</option>
+                </select>
+            </div>
+
+            <table class="acc-table">
+                <thead>
+                <tr>
+                    <th>Tài khoản</th>
+                    <th>Role</th>
+                    <th>Nhân viên được gán</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày tạo</th>
+                    <th>Thao tác</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!-- DIRECTOR -->
+                <tr>
+                    <td><div class="acc-cell"><div class="acc-av" style="background:var(--pri-s);color:var(--pri)">DR</div><div><div class="acc-username">director</div><div class="acc-id">DIR01</div></div></div></td>
+                    <td><span class="role-badge role-director">DIRECTOR</span></td>
+                    <td style="font-size:13px;color:var(--txt2)"><i class="fa-solid fa-link-slash" style="font-size:11px"></i> Chưa gán</td>
+                    <td><button class="status-toggle status-on" onclick="toggleStatus(this)"><i class="fa-solid fa-circle" style="font-size:7px"></i> Hoạt động</button></td>
+                    <td style="font-size:12px;color:var(--txt2)">20/03/2026</td>
+                    <td>
+                        <div style="display:flex;gap:5px">
+                            <button class="action-btn btn-reset" title="Reset mật khẩu" onclick="resetPass('director')"><i class="fa-solid fa-key"></i></button>
+                            <button class="action-btn btn-role"  title="Đổi role"        onclick="openRoleModal('DIR01','director')"><i class="fa-solid fa-user-shield"></i></button>
+                            <button class="action-btn btn-assign" title="Gán nhân viên"  onclick="toast('info','fa-link','Gán nhân viên','Chọn NV để gán cho tài khoản director')"><i class="fa-solid fa-link"></i></button>
+                            <button class="action-btn btn-delete" title="Xóa tài khoản"  onclick="deleteAcc('DIR01')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                <!-- ADMIN -->
+                <tr>
+                    <td><div class="acc-cell"><div class="acc-av" style="background:var(--adm-s);color:var(--adm)">AD</div><div><div class="acc-username">admin01</div><div class="acc-id">AD01</div></div></div></td>
+                    <td><span class="role-badge role-admin">ADMIN</span></td>
+                    <td style="font-size:13px;color:var(--txt2)"><i class="fa-solid fa-link-slash" style="font-size:11px"></i> Chưa gán</td>
+                    <td><button class="status-toggle status-on" onclick="toggleStatus(this)"><i class="fa-solid fa-circle" style="font-size:7px"></i> Hoạt động</button></td>
+                    <td style="font-size:12px;color:var(--txt2)">01/03/2026</td>
+                    <td>
+                        <div style="display:flex;gap:5px">
+                            <button class="action-btn btn-reset" title="Reset mật khẩu" onclick="resetPass('admin01')"><i class="fa-solid fa-key"></i></button>
+                            <button class="action-btn btn-role"  title="Đổi role"        onclick="openRoleModal('AD01','admin01')"><i class="fa-solid fa-user-shield"></i></button>
+                            <button class="action-btn btn-assign" title="Gán nhân viên"  onclick="toast('info','fa-link','Gán nhân viên','Chọn NV để gán cho admin01')"><i class="fa-solid fa-link"></i></button>
+                            <button class="action-btn btn-delete" title="Xóa tài khoản"  onclick="deleteAcc('AD01')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                <!-- HR -->
+                <tr>
+                    <td><div class="acc-cell"><div class="acc-av" style="background:var(--inf-s);color:var(--inf)">HR</div><div><div class="acc-username">hr01</div><div class="acc-id">HR01</div></div></div></td>
+                    <td><span class="role-badge role-hr">HR</span></td>
+                    <td style="font-size:13px;color:var(--txt)">Nguyễn Thị L. <span style="color:var(--txt2);font-size:11px">(NV005)</span></td>
+                    <td><button class="status-toggle status-on" onclick="toggleStatus(this)"><i class="fa-solid fa-circle" style="font-size:7px"></i> Hoạt động</button></td>
+                    <td style="font-size:12px;color:var(--txt2)">01/03/2026</td>
+                    <td>
+                        <div style="display:flex;gap:5px">
+                            <button class="action-btn btn-reset" title="Reset mật khẩu" onclick="resetPass('hr01')"><i class="fa-solid fa-key"></i></button>
+                            <button class="action-btn btn-role"  title="Đổi role"        onclick="openRoleModal('HR01','hr01')"><i class="fa-solid fa-user-shield"></i></button>
+                            <button class="action-btn btn-assign" title="Gán nhân viên"  onclick="toast('info','fa-link','Gán nhân viên','Chọn NV để gán cho hr01')"><i class="fa-solid fa-link"></i></button>
+                            <button class="action-btn btn-delete" title="Xóa tài khoản"  onclick="deleteAcc('HR01')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                <!-- EMPLOYEE 1 -->
+                <tr>
+                    <td><div class="acc-cell"><div class="acc-av" style="background:var(--ok-s);color:var(--ok)">NA</div><div><div class="acc-username">nguyenvana</div><div class="acc-id">EMP01</div></div></div></td>
+                    <td><span class="role-badge role-employee">EMPLOYEE</span></td>
+                    <td style="font-size:13px;color:var(--txt)">Nguyễn Văn A <span style="color:var(--txt2);font-size:11px">(NV001)</span></td>
+                    <td><button class="status-toggle status-on" onclick="toggleStatus(this)"><i class="fa-solid fa-circle" style="font-size:7px"></i> Hoạt động</button></td>
+                    <td style="font-size:12px;color:var(--txt2)">10/03/2026</td>
+                    <td>
+                        <div style="display:flex;gap:5px">
+                            <button class="action-btn btn-reset" title="Reset mật khẩu" onclick="resetPass('nguyenvana')"><i class="fa-solid fa-key"></i></button>
+                            <button class="action-btn btn-role"  title="Đổi role"        onclick="openRoleModal('EMP01','nguyenvana')"><i class="fa-solid fa-user-shield"></i></button>
+                            <button class="action-btn btn-assign" title="Gán nhân viên"  onclick="toast('info','fa-link','Đã gán','NV001 đã được gán')"><i class="fa-solid fa-link"></i></button>
+                            <button class="action-btn btn-delete" title="Xóa tài khoản"  onclick="deleteAcc('EMP01')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                <!-- EMPLOYEE bị khóa -->
+                <tr>
+                    <td><div class="acc-cell"><div class="acc-av" style="background:var(--err-s);color:var(--err)">LC</div><div><div class="acc-username">levanc</div><div class="acc-id">EMP02</div></div></div></td>
+                    <td><span class="role-badge role-employee">EMPLOYEE</span></td>
+                    <td style="font-size:13px;color:var(--txt)">Lê Văn C <span style="color:var(--txt2);font-size:11px">(NV003)</span></td>
+                    <td><button class="status-toggle status-off" onclick="toggleStatus(this)"><i class="fa-solid fa-circle" style="font-size:7px"></i> Bị khóa</button></td>
+                    <td style="font-size:12px;color:var(--txt2)">05/03/2026</td>
+                    <td>
+                        <div style="display:flex;gap:5px">
+                            <button class="action-btn btn-reset" title="Reset mật khẩu" onclick="resetPass('levanc')"><i class="fa-solid fa-key"></i></button>
+                            <button class="action-btn btn-role"  title="Đổi role"        onclick="openRoleModal('EMP02','levanc')"><i class="fa-solid fa-user-shield"></i></button>
+                            <button class="action-btn btn-assign" title="Gán nhân viên"  onclick="toast('info','fa-link','Đã gán','NV003 đã được gán')"><i class="fa-solid fa-link"></i></button>
+                            <button class="action-btn btn-delete" title="Xóa tài khoản"  onclick="deleteAcc('EMP02')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ── Row 3: Log đăng nhập | TK chưa gán NV ── -->
+        <div class="g2">
+
+            <!-- Widget 3: Log đăng nhập -->
+            <div class="card">
+                <div class="card-hd">
+                    <div class="card-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--inf);margin-right:6px"></i>Log đăng nhập gần đây</div>
+                    <a class="card-link" href="#">Xem tất cả</a>
+                </div>
+                <div class="log-list">
+                    <div class="log-item">
+                        <div class="log-icon" style="background:var(--ok-s);color:var(--ok)"><i class="fa-solid fa-circle-check"></i></div>
+                        <div style="flex:1">
+                            <div class="log-user">director</div>
+                            <div class="log-meta">IP: 192.168.1.10 &nbsp;·&nbsp; Đăng nhập thành công</div>
+                        </div>
+                        <div class="log-time">08:02 hôm nay</div>
+                    </div>
+                    <div class="log-item">
+                        <div class="log-icon" style="background:var(--ok-s);color:var(--ok)"><i class="fa-solid fa-circle-check"></i></div>
+                        <div style="flex:1">
+                            <div class="log-user">hr01</div>
+                            <div class="log-meta">IP: 192.168.1.15 &nbsp;·&nbsp; Đăng nhập thành công</div>
+                        </div>
+                        <div class="log-time">07:58 hôm nay</div>
+                    </div>
+                    <div class="log-item" style="background:var(--err-s)">
+                        <div class="log-icon" style="background:#fff;color:var(--err)"><i class="fa-solid fa-circle-xmark"></i></div>
+                        <div style="flex:1">
+                            <div class="log-user" style="color:var(--err)">levanc</div>
+                            <div class="log-meta">IP: 192.168.1.22 &nbsp;·&nbsp; Sai mật khẩu (lần 3)</div>
+                        </div>
+                        <div class="log-time" style="color:var(--err)">07:45 hôm nay</div>
+                    </div>
+                    <div class="log-item">
+                        <div class="log-icon" style="background:var(--ok-s);color:var(--ok)"><i class="fa-solid fa-circle-check"></i></div>
+                        <div style="flex:1">
+                            <div class="log-user">nguyenvana</div>
+                            <div class="log-meta">IP: 192.168.1.11 &nbsp;·&nbsp; Đăng nhập thành công</div>
+                        </div>
+                        <div class="log-time">07:40 hôm nay</div>
+                    </div>
+                    <div class="log-item" style="background:var(--warn-s)">
+                        <div class="log-icon" style="background:#fff;color:var(--warn)"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div style="flex:1">
+                            <div class="log-user" style="color:var(--warn)">unknown</div>
+                            <div class="log-meta">IP: 203.113.x.x &nbsp;·&nbsp; IP lạ, sai mật khẩu</div>
+                        </div>
+                        <div class="log-time" style="color:var(--warn)">Hôm qua</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Widget 4: Tài khoản chưa gán NV -->
+            <div class="card">
+                <div class="card-hd">
+                    <div class="card-title">
+                        <i class="fa-solid fa-link-slash" style="color:var(--warn);margin-right:6px"></i>TK chưa gán nhân viên
+                        <span style="background:var(--warn);color:#fff;font-size:10px;padding:1px 7px;border-radius:20px;margin-left:5px">3</span>
+                    </div>
+                </div>
+                <div class="unassigned-list">
+                    <div class="unassigned-item">
+                        <div class="ua-av">DR</div>
+                        <div>
+                            <div class="ua-name">director</div>
+                            <div class="ua-role"><span class="role-badge role-director" style="font-size:10px;padding:1px 7px">DIRECTOR</span></div>
+                        </div>
+                        <select class="ua-select">
+                            <option value="">-- Chọn nhân viên --</option>
+                            <option>Nguyễn Văn A (NV001)</option>
+                            <option>Bùi Thị B (NV002)</option>
+                            <option>Trần Thanh H (NV004)</option>
+                        </select>
+                        <button class="btn-assign-small" onclick="assignNV('director')">Gán</button>
+                    </div>
+                    <div class="unassigned-item">
+                        <div class="ua-av">AD</div>
+                        <div>
+                            <div class="ua-name">admin01</div>
+                            <div class="ua-role"><span class="role-badge role-admin" style="font-size:10px;padding:1px 7px">ADMIN</span></div>
+                        </div>
+                        <select class="ua-select">
+                            <option value="">-- Chọn nhân viên --</option>
+                            <option>Nguyễn Văn A (NV001)</option>
+                            <option>Bùi Thị B (NV002)</option>
+                            <option>Trần Thanh H (NV004)</option>
+                        </select>
+                        <button class="btn-assign-small" onclick="assignNV('admin01')">Gán</button>
+                    </div>
+                    <div class="unassigned-item">
+                        <div class="ua-av">DH</div>
+                        <div>
+                            <div class="ua-name">depthead01</div>
+                            <div class="ua-role"><span class="role-badge role-hr" style="font-size:10px;padding:1px 7px">HR</span></div>
+                        </div>
+                        <select class="ua-select">
+                            <option value="">-- Chọn nhân viên --</option>
+                            <option>Nguyễn Văn A (NV001)</option>
+                            <option>Bùi Thị B (NV002)</option>
+                            <option>Trần Thanh H (NV004)</option>
+                        </select>
+                        <button class="btn-assign-small" onclick="assignNV('depthead01')">Gán</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- ═══ MODAL TẠO TÀI KHOẢN ═══ -->
+<div class="modal-overlay" id="addModal">
+    <div class="modal-box">
+        <div class="modal-title"><i class="fa-solid fa-user-plus" style="color:var(--adm);margin-right:8px"></i>Tạo tài khoản mới</div>
+        <div class="form-row">
+            <label class="form-label">Username <span style="color:var(--err)">*</span></label>
+            <input class="form-input" type="text" placeholder="Nhập username..." id="newUsername"/>
+        </div>
+        <div class="form-row">
+            <label class="form-label">Mật khẩu tạm <span style="color:var(--err)">*</span></label>
+            <input class="form-input" type="password" placeholder="Mật khẩu tạm thời..." id="newPassword"/>
+        </div>
+        <div class="form-row">
+            <label class="form-label">Role <span style="color:var(--err)">*</span></label>
+            <select class="form-select" id="newRole">
+                <option value="">-- Chọn role --</option>
+                <option value="DIRECTOR">DIRECTOR</option>
+                <option value="ADMIN">ADMIN</option>
+                <option value="HR">HR</option>
+                <option value="EMPLOYEE">EMPLOYEE</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <label class="form-label">Gán nhân viên <span style="color:var(--txt2);font-weight:500">(tuỳ chọn)</span></label>
+            <select class="form-select">
+                <option value="">-- Chọn nhân viên --</option>
+                <option>Nguyễn Văn A (NV001)</option>
+                <option>Bùi Thị B (NV002)</option>
+                <option>Lê Văn C (NV003)</option>
+                <option>Trần Thanh H (NV004)</option>
+            </select>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeAddModal()">Hủy</button>
+            <button class="btn-submit" onclick="submitAdd()"><i class="fa-solid fa-plus"></i> Tạo tài khoản</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MODAL ĐỔI ROLE ═══ -->
+<div class="modal-overlay" id="roleModal">
+    <div class="modal-box" style="width:360px">
+        <div class="modal-title"><i class="fa-solid fa-user-shield" style="color:var(--inf);margin-right:8px"></i>Đổi role tài khoản</div>
+        <div style="font-size:13px;color:var(--txt2);margin-bottom:14px">Tài khoản: <strong id="roleModalUser"></strong></div>
+        <div class="form-row">
+            <label class="form-label">Role mới <span style="color:var(--err)">*</span></label>
+            <select class="form-select" id="newRoleSelect">
+                <option value="DIRECTOR">DIRECTOR</option>
+                <option value="ADMIN">ADMIN</option>
+                <option value="HR">HR</option>
+                <option value="EMPLOYEE">EMPLOYEE</option>
+            </select>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeRoleModal()">Hủy</button>
+            <button class="btn-submit" onclick="confirmRole()"><i class="fa-solid fa-check"></i> Xác nhận đổi role</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- ═══ SCRIPTS ═══ -->
+<script>
+    /* DateTime */
+    function tick() {
+        const d = new Date();
+        const days = ['Chủ nhật','Thứ hai','Thứ ba','Thứ tư','Thứ năm','Thứ sáu','Thứ bảy'];
+        document.getElementById('dateTime').textContent =
+            days[d.getDay()] + ', ' +
+            String(d.getDate()).padStart(2,'0') + '/' +
+            String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear() +
+            ' — ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    }
+    tick(); setInterval(tick, 1000);
+
+    /* Toast */
+    const TC = { success:'var(--ok)', info:'var(--inf)', warn:'var(--warn)', err:'var(--err)' };
+    function toast(type, icon, title, msg) {
+        const w = document.getElementById('toastWrap');
+        const el = document.createElement('div');
+        el.className = 'toast';
+        el.innerHTML = `<i class="fa-solid ${icon}" style="color:${TC[type]};font-size:17px"></i>
+      <div><div style="font-weight:700;color:var(--txt)">${title}</div>
+      <div style="font-size:12px;color:var(--txt2)">${msg}</div></div>`;
+        w.appendChild(el);
+        setTimeout(() => el.remove(), 3500);
+    }
+
+    /* Toggle khóa / mở tài khoản */
+    function toggleStatus(btn) {
+        const isOn = btn.classList.contains('status-on');
+        btn.classList.toggle('status-on', !isOn);
+        btn.classList.toggle('status-off', isOn);
+        btn.innerHTML = isOn
+            ? '<i class="fa-solid fa-circle" style="font-size:7px"></i> Bị khóa'
+            : '<i class="fa-solid fa-circle" style="font-size:7px"></i> Hoạt động';
+        toast(isOn ? 'warn' : 'success',
+            isOn ? 'fa-lock' : 'fa-lock-open',
+            isOn ? 'Đã khóa tài khoản' : 'Đã mở khóa tài khoản',
+            isOn ? 'Tài khoản đã bị vô hiệu hóa' : 'Tài khoản đã được kích hoạt lại');
+    }
+
+    /* Reset mật khẩu */
+    function resetPass(username) {
+        toast('warn','fa-key','Gửi email reset mật khẩu',`Đã gửi link reset đến email của ${username}`);
+    }
+
+    /* Xóa tài khoản */
+    function deleteAcc(id) {
+        if (confirm(`Xác nhận xóa tài khoản ${id}?`)) {
+            toast('err','fa-trash','Đã xóa tài khoản',`Tài khoản ${id} đã được xóa khỏi hệ thống`);
+        }
+    }
+
+    /* Gán NV */
+    function assignNV(username) {
+        toast('success','fa-link','Gán nhân viên thành công',`Tài khoản ${username} đã được gán nhân viên`);
+    }
+
+    /* Modal Tạo TK */
+    function openAddModal()  { document.getElementById('addModal').classList.add('show'); }
+    function closeAddModal() { document.getElementById('addModal').classList.remove('show'); }
+    function submitAdd() {
+        const u = document.getElementById('newUsername').value.trim();
+        const r = document.getElementById('newRole').value;
+        if (!u || !r) {
+            toast('err','fa-triangle-exclamation','Thiếu thông tin','Vui lòng nhập đủ username và role'); return;
+        }
+        toast('success','fa-user-plus','Tạo tài khoản thành công',`Tài khoản "${u}" (${r}) đã được tạo`);
+        closeAddModal();
+    }
+
+    /* Modal Đổi Role */
+    let roleTargetId = '', roleTargetUser = '';
+    function openRoleModal(id, username) {
+        roleTargetId = id; roleTargetUser = username;
+        document.getElementById('roleModalUser').textContent = username + ' (' + id + ')';
+        document.getElementById('roleModal').classList.add('show');
+    }
+    function closeRoleModal() { document.getElementById('roleModal').classList.remove('show'); }
+    function confirmRole() {
+        const newRole = document.getElementById('newRoleSelect').value;
+        toast('success','fa-user-shield','Đổi role thành công',`${roleTargetUser} đã được đổi sang role ${newRole}`);
+        closeRoleModal();
+    }
+
+    /* Đóng modal khi click overlay */
+    ['addModal','roleModal'].forEach(id => {
+        document.getElementById(id).addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('show');
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Employee Dashboard — HRM Group 117</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+    <style>
+        :root {
+            --pri:    #FF6B35;
+            --pri-s:  #FFF0EB;
+            --pri-d:  #e55a25;
+            --bg:     #F4F6F9;
+            --card:   #fff;
+            --ok:     #10B981;
+            --ok-s:   #ECFDF5;
+            --warn:   #F59E0B;
+            --warn-s: #FFFBEB;
+            --err:    #EF4444;
+            --err-s:  #FEF2F2;
+            --inf:    #3B82F6;
+            --inf-s:  #EFF6FF;
+            --teal:   #0D9488;
+            --teal-s: #F0FDFA;
+            --txt:    #1F2937;
+            --txt2:   #6B7280;
+            --border: #E5E7EB;
+            --sidebar-w: 240px;
+            --header-h:  60px;
+            --radius: 12px;
+            --shadow: 0 2px 12px rgba(0,0,0,.07);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--bg);
+            color: var(--txt);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: var(--sidebar-w);
+            background: #fff;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0; left: 0;
+            height: 100vh;
+            z-index: 100;
+        }
+        .sidebar-logo {
+            height: var(--header-h);
+            display: flex; align-items: center; gap: 10px;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .logo-icon {
+            width: 32px; height: 32px;
+            background: var(--pri); border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: 800; font-size: 16px;
+        }
+        .sidebar-logo span { font-weight: 800; font-size: 17px; color: var(--txt); }
+        .sidebar-logo span em { color: var(--pri); font-style: normal; }
+
+        .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; }
+        .nav-section {
+            font-size: 10px; font-weight: 700; letter-spacing:.08em;
+            text-transform: uppercase; color: var(--txt2);
+            padding: 10px 20px 4px;
+        }
+        .nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 20px;
+            font-size: 13.5px; font-weight: 600; color: var(--txt2);
+            border-left: 3px solid transparent;
+            text-decoration: none;
+            transition: all .18s;
+        }
+        .nav-item i { width: 18px; text-align: center; font-size: 14px; }
+        .nav-item:hover { color: var(--pri); background: var(--pri-s); }
+        .nav-item.active { color: var(--pri); background: var(--pri-s); border-left-color: var(--pri); }
+        .nav-badge {
+            margin-left: auto;
+            background: var(--pri); color: #fff;
+            font-size: 10px; font-weight: 700;
+            padding: 1px 6px; border-radius: 20px;
+        }
+        .sidebar-footer {
+            padding: 14px 20px;
+            border-top: 1px solid var(--border);
+            display: flex; align-items: center; gap: 10px;
+            flex-shrink: 0;
+        }
+        .s-avatar {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: var(--pri-s);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; color: var(--pri); font-size: 13px;
+        }
+        .s-uname { font-size: 13px; font-weight: 700; color: var(--txt); }
+        .s-role  { font-size: 11px; color: var(--txt2); }
+        .logout-btn {
+            margin-left: auto;
+            background: none; border: none; cursor: pointer;
+            color: var(--txt2); font-size: 15px;
+            transition: color .18s;
+        }
+        .logout-btn:hover { color: var(--err); }
+
+        /* ── MAIN ── */
+        .main-wrap {
+            margin-left: var(--sidebar-w);
+            flex: 1;
+            display: flex; flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* ── TOPBAR ── */
+        .topbar {
+            height: var(--header-h);
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center;
+            padding: 0 24px; gap: 10px;
+            position: sticky; top: 0; z-index: 50;
+        }
+        .page-title { font-size: 16px; font-weight: 800; }
+        .sep { color: var(--txt2); font-size: 13px; }
+        .page-cur { font-size: 13px; color: var(--pri); font-weight: 600; }
+        .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+        .icon-btn {
+            width: 36px; height: 36px;
+            background: var(--bg); border: none; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--txt2); font-size: 15px;
+            cursor: pointer; position: relative; transition: all .18s;
+        }
+        .icon-btn:hover { background: var(--pri-s); color: var(--pri); }
+        .notif-dot {
+            position: absolute; top: 6px; right: 6px;
+            width: 7px; height: 7px;
+            background: var(--err); border-radius: 50%;
+            border: 1.5px solid #fff;
+        }
+        .t-avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: var(--pri);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: 800; font-size: 13px; cursor: pointer;
+        }
+
+        /* ── CONTENT ── */
+        .page-content { padding: 24px; flex: 1; }
+
+        /* ── WELCOME BANNER ── */
+        .welcome-banner {
+            background: linear-gradient(135deg, var(--pri) 0%, var(--pri-d) 100%);
+            border-radius: var(--radius);
+            padding: 24px 28px;
+            display: flex; align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            position: relative; overflow: hidden;
+        }
+        .welcome-banner::before {
+            content: '';
+            position: absolute; top: -40px; right: -20px;
+            width: 160px; height: 160px;
+            background: rgba(255,255,255,.08); border-radius: 50%;
+        }
+        .welcome-banner::after {
+            content: '';
+            position: absolute; bottom: -50px; right: 80px;
+            width: 110px; height: 110px;
+            background: rgba(255,255,255,.05); border-radius: 50%;
+        }
+        .wb-left h2 { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+        .wb-left p  { font-size: 13px; color: rgba(255,255,255,.82); font-weight: 500; }
+        .wb-date    { font-size: 12px; color: rgba(255,255,255,.7); margin-top: 8px; font-weight: 600; }
+
+        .checkin-group { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; z-index: 1; }
+        .checkin-status-txt { font-size: 12px; color: rgba(255,255,255,.85); font-weight: 600; }
+        .checkin-status-txt span { color: #fff; font-weight: 800; }
+
+        .ci-btn {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 22px; border-radius: 8px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 13.5px; font-weight: 700;
+            cursor: pointer; border: none; transition: all .2s;
+        }
+        .ci-btn.btn-in  { background: #fff; color: var(--pri); }
+        .ci-btn.btn-in:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,.2); }
+        .ci-btn.btn-out {
+            background: rgba(255,255,255,.2);
+            color: #fff;
+            border: 1.5px solid rgba(255,255,255,.4);
+        }
+        .ci-btn.btn-out:hover { background: rgba(255,255,255,.3); }
+
+        /* ── GRID ── */
+        .g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+        .g3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 24px; }
+        .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+
+        /* ── CARD ── */
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+        }
+        .card-hd {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .card-title { font-size: 14px; font-weight: 800; color: var(--txt); }
+        .card-link {
+            font-size: 12px; font-weight: 600; color: var(--pri);
+            text-decoration: none;
+        }
+        .card-link:hover { text-decoration: underline; }
+
+        /* ── KPI CARDS ── */
+        .kpi-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 18px 20px;
+            display: flex; align-items: center; gap: 14px;
+        }
+        .kpi-icon {
+            width: 48px; height: 48px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; flex-shrink: 0;
+        }
+        .kpi-lbl { font-size: 12px; font-weight: 600; color: var(--txt2); margin-bottom: 3px; }
+        .kpi-val { font-size: 22px; font-weight: 800; color: var(--txt); line-height: 1.1; }
+        .kpi-val small { font-size: 14px; color: var(--txt2); font-weight: 600; }
+        .kpi-sub { font-size: 11px; color: var(--txt2); margin-top: 4px; }
+        .badge {
+            display: inline-flex; align-items: center; gap: 3px;
+            font-size: 11px; font-weight: 700;
+            padding: 2px 8px; border-radius: 20px;
+        }
+
+        /* ── STAT ROW ── */
+        .stat-row {
+            display: flex; border-radius: 8px; overflow: hidden;
+            border: 1px solid var(--border); margin-bottom: 14px;
+        }
+        .stat-cell {
+            flex: 1; padding: 10px; text-align: center;
+            border-right: 1px solid var(--border);
+        }
+        .stat-cell:last-child { border-right: none; }
+        .stat-cell .snum { font-size: 19px; font-weight: 800; }
+        .stat-cell .slbl { font-size: 11px; color: var(--txt2); font-weight: 600; margin-top: 2px; }
+
+        /* ── CHART ── */
+        .chart-wrap { position: relative; height: 175px; }
+
+        /* ── NOTIFICATION LIST ── */
+        .notif-list { display: flex; flex-direction: column; gap: 8px; }
+        .notif-item {
+            display: flex; align-items: flex-start; gap: 11px;
+            padding: 11px 12px; border-radius: 8px;
+            background: var(--bg); cursor: pointer;
+            transition: background .18s;
+        }
+        .notif-item:hover { background: var(--pri-s); }
+        .notif-item.unread {
+            background: var(--inf-s);
+            border-left: 3px solid var(--inf);
+        }
+        .notif-item.unread:hover { background: #dbeafe; }
+        .ni-icon {
+            width: 34px; height: 34px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; flex-shrink: 0;
+        }
+        .ni-title { font-size: 13px; font-weight: 700; color: var(--txt); margin-bottom: 2px; }
+        .ni-desc  { font-size: 12px; color: var(--txt2); }
+        .ni-time  { font-size: 11px; color: var(--txt2); margin-top: 3px; }
+        .ni-dot   { margin-left: auto; flex-shrink: 0; width: 8px; height: 8px; background: var(--inf); border-radius: 50%; margin-top: 4px; }
+
+        /* ── QUICK ACTIONS ── */
+        .qa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+        .qa-btn {
+            display: flex; align-items: center; gap: 9px;
+            padding: 11px 13px; border-radius: 8px;
+            background: var(--bg); border: 1px solid var(--border);
+            font-family: 'Nunito', sans-serif;
+            font-size: 13px; font-weight: 600; color: var(--txt);
+            cursor: pointer; text-decoration: none;
+            transition: all .18s;
+        }
+        .qa-btn:hover { background: var(--pri-s); border-color: var(--pri); color: var(--pri); }
+
+        /* ── PROGRESS ── */
+        .prg-row { margin-bottom: 13px; }
+        .prg-lbl { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12.5px; font-weight: 600; }
+        .prg-bg  { background: var(--bg); border-radius: 20px; height: 8px; overflow: hidden; }
+        .prg-fill { height: 100%; border-radius: 20px; transition: width .6s ease; }
+
+        /* ── LEAVE TIMELINE ── */
+        .leave-list { display: flex; flex-direction: column; gap: 10px; }
+        .leave-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 14px; border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        .l-date {
+            display: flex; flex-direction: column; align-items: center;
+            border-radius: 8px; padding: 6px 10px; min-width: 48px;
+            flex-shrink: 0;
+        }
+        .l-date .day { font-size: 18px; font-weight: 800; line-height: 1; }
+        .l-date .mon { font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .l-info { flex: 1; }
+        .l-type { font-size: 13px; font-weight: 700; color: var(--txt); }
+        .l-dur  { font-size: 12px; color: var(--txt2); margin-top: 2px; }
+        .st-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+        .st-ok   { background: var(--ok-s);   color: var(--ok); }
+        .st-warn { background: var(--warn-s); color: var(--warn); }
+        .st-err  { background: var(--err-s);  color: var(--err); }
+
+        /* ── PAYSLIP ── */
+        .ps-month  { font-size: 12px; color: var(--txt2); font-weight: 600; margin-bottom: 4px; }
+        .ps-amount { font-size: 26px; font-weight: 800; color: var(--txt); }
+        .ps-amount small { font-size: 14px; color: var(--txt2); font-weight: 600; }
+        .ps-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 7px 0; border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+        .ps-row:last-of-type { border-bottom: none; }
+        .ps-row .lbl { color: var(--txt2); }
+        .ps-row .val { font-weight: 700; }
+        .ps-row .val.neg { color: var(--err); }
+        .ps-dl {
+            width: 100%; margin-top: 12px;
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+            padding: 9px; border-radius: 8px;
+            background: var(--pri-s); color: var(--pri);
+            font-size: 13px; font-weight: 700;
+            border: none; cursor: pointer; font-family: 'Nunito', sans-serif;
+            transition: all .18s;
+        }
+        .ps-dl:hover { background: var(--pri); color: #fff; }
+
+        /* ── TOAST ── */
+        .toast-wrap {
+            position: fixed; bottom: 24px; right: 24px;
+            display: flex; flex-direction: column; gap: 8px;
+            z-index: 9999;
+        }
+        .toast {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border-radius: 10px;
+            background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,.12);
+            font-size: 13.5px; font-weight: 600;
+            animation: slideUp .3s ease;
+            min-width: 260px;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+
+        @media (max-width: 1200px) { .g4 { grid-template-columns: repeat(2,1fr); } }
+        @media (max-width: 960px)  { .g3 { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 768px)  {
+            .sidebar { display: none; }
+            .main-wrap { margin-left: 0; }
+            .g2, .g3 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">H</div>
+        <span>Smart<em>HRM</em></span>
+    </div>
+
+    <nav class="sidebar-nav">
+        <div class="nav-section">Menu chính</div>
+        <a class="nav-item active" href="#"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+        <a class="nav-item" href="#"><i class="fa-solid fa-user"></i> Hồ sơ cá nhân</a>
+        <a class="nav-item" href="#"><i class="fa-solid fa-clock"></i> Chấm công</a>
+        <a class="nav-item" href="#"><i class="fa-solid fa-calendar-xmark"></i> Nghỉ phép <span class="nav-badge">1</span></a>
+        <a class="nav-item" href="#"><i class="fa-solid fa-money-check-dollar"></i> Phiếu lương</a>
+        <div class="nav-section">Thông tin</div>
+        <a class="nav-item" href="#"><i class="fa-solid fa-bell"></i> Thông báo <span class="nav-badge">3</span></a>
+        <a class="nav-item" href="#"><i class="fa-solid fa-envelope"></i> Email nội bộ</a>
+        <a class="nav-item" href="#"><i class="fa-solid fa-trophy"></i> Khen thưởng</a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="s-avatar">NA</div>
+        <div>
+            <div class="s-uname">Nguyễn Văn A</div>
+            <div class="s-role">Employee · Phòng IT</div>
+        </div>
+        <button class="logout-btn" title="Đăng xuất"><i class="fa-solid fa-right-from-bracket"></i></button>
+    </div>
+</aside>
+
+<!-- ═══ MAIN WRAP ═══ -->
+<div class="main-wrap">
+
+    <!-- Topbar -->
+    <header class="topbar">
+        <span class="page-title">Dashboard</span>
+        <span class="sep">/</span>
+        <span class="page-cur">Employee Dashboard</span>
+        <div class="topbar-right">
+            <button class="icon-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+            <button class="icon-btn" onclick="toast('info','fa-bell','3 thông báo mới','Bạn có 3 thông báo chưa đọc')">
+                <i class="fa-solid fa-bell"></i>
+                <span class="notif-dot"></span>
+            </button>
+            <div class="t-avatar">NA</div>
+        </div>
+    </header>
+
+    <!-- Page -->
+    <main class="page-content">
+
+        <!-- Welcome Banner -->
+        <div class="welcome-banner">
+            <div class="wb-left">
+                <h2>Chào buổi sáng, Nguyễn Văn A! 👋</h2>
+                <p>Chúc bạn một ngày làm việc hiệu quả tại phòng Công nghệ thông tin.</p>
+                <div class="wb-date" id="dateTime">...</div>
+            </div>
+            <div class="checkin-group">
+                <div class="checkin-status-txt">Trạng thái: <span id="ciStatus">Chưa check-in</span></div>
+                <button class="ci-btn btn-in" id="btnIn" onclick="doCheckin()">
+                    <i class="fa-solid fa-fingerprint"></i> Check-in
+                </button>
+                <button class="ci-btn btn-out" id="btnOut" style="display:none" onclick="doCheckout()">
+                    <i class="fa-solid fa-right-from-bracket"></i> Check-out
+                </button>
+            </div>
+        </div>
+
+        <!-- Widget 2: KPI Cards -->
+        <div class="g4">
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:var(--ok-s);color:var(--ok)"><i class="fa-solid fa-calendar-check"></i></div>
+                <div>
+                    <div class="kpi-lbl">Ngày có mặt (tháng)</div>
+                    <div class="kpi-val">18 <small>/ 22</small></div>
+                    <div class="kpi-sub"><span class="badge" style="background:var(--ok-s);color:var(--ok)"><i class="fa-solid fa-arrow-up" style="font-size:9px"></i> 82%</span></div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:var(--warn-s);color:var(--warn)"><i class="fa-solid fa-clock"></i></div>
+                <div>
+                    <div class="kpi-lbl">Số lần đi muộn</div>
+                    <div class="kpi-val">2</div>
+                    <div class="kpi-sub"><span class="badge" style="background:var(--warn-s);color:var(--warn)">tháng này</span></div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:var(--inf-s);color:var(--inf)"><i class="fa-solid fa-umbrella-beach"></i></div>
+                <div>
+                    <div class="kpi-lbl">Phép còn lại</div>
+                    <div class="kpi-val">8 <small>/ 12</small></div>
+                    <div class="kpi-sub">Đã dùng: 4 ngày</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:var(--pri-s);color:var(--pri)"><i class="fa-solid fa-sack-dollar"></i></div>
+                <div>
+                    <div class="kpi-lbl">Lương tháng trước</div>
+                    <div class="kpi-val" style="font-size:17px">12,400,000đ</div>
+                    <div class="kpi-sub"><span class="badge" style="background:var(--ok-s);color:var(--ok)"><i class="fa-solid fa-arrow-up" style="font-size:9px"></i> +200K</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2: Attendance Chart | Notifications | Quick Actions + Leave Quota -->
+        <div class="g3">
+
+            <!-- Attendance Bar Chart -->
+            <div class="card">
+                <div class="card-hd">
+                    <div class="card-title"><i class="fa-solid fa-chart-column" style="color:var(--pri);margin-right:6px"></i>Chuyên cần 6 tháng</div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-cell">
+                        <div class="snum" style="color:var(--ok)">18</div>
+                        <div class="slbl">Có mặt</div>
+                    </div>
+                    <div class="stat-cell">
+                        <div class="snum" style="color:var(--warn)">2</div>
+                        <div class="slbl">Đi muộn</div>
+                    </div>
+                    <div class="stat-cell">
+                        <div class="snum" style="color:var(--err)">2</div>
+                        <div class="slbl">Vắng</div>
+                    </div>
+                </div>
+                <div class="chart-wrap"><canvas id="attChart"></canvas></div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="card">
+                <div class="card-hd">
+                    <div class="card-title">
+                        <i class="fa-solid fa-bell" style="color:var(--inf);margin-right:6px"></i>Thông báo
+                        <span style="background:var(--err);color:#fff;font-size:10px;padding:1px 7px;border-radius:20px;margin-left:5px">3</span>
+                    </div>
+                    <a class="card-link" href="#">Tất cả</a>
+                </div>
+                <div class="notif-list">
+                    <div class="notif-item unread">
+                        <div class="ni-icon" style="background:var(--ok-s);color:var(--ok)"><i class="fa-solid fa-circle-check"></i></div>
+                        <div style="flex:1">
+                            <div class="ni-title">Đơn phép đã được duyệt</div>
+                            <div class="ni-desc">HR đã duyệt đơn nghỉ phép 25–26/03 của bạn.</div>
+                            <div class="ni-time"><i class="fa-regular fa-clock"></i> 5 phút trước</div>
+                        </div>
+                        <div class="ni-dot"></div>
+                    </div>
+                    <div class="notif-item unread">
+                        <div class="ni-icon" style="background:var(--pri-s);color:var(--pri)"><i class="fa-solid fa-money-bill-wave"></i></div>
+                        <div style="flex:1">
+                            <div class="ni-title">Phiếu lương tháng 2 sẵn sàng</div>
+                            <div class="ni-desc">Lương 02/2026 đã chốt. Nhấn để xem chi tiết.</div>
+                            <div class="ni-time"><i class="fa-regular fa-clock"></i> 2 giờ trước</div>
+                        </div>
+                        <div class="ni-dot"></div>
+                    </div>
+                    <div class="notif-item unread">
+                        <div class="ni-icon" style="background:var(--warn-s);color:var(--warn)"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div style="flex:1">
+                            <div class="ni-title">Nhắc nhở: Check-in trễ</div>
+                            <div class="ni-desc">Check-in lúc 08:32 ngày 17/03. Phạt: 50,000đ.</div>
+                            <div class="ni-time"><i class="fa-regular fa-clock"></i> Hôm qua</div>
+                        </div>
+                        <div class="ni-dot"></div>
+                    </div>
+                    <div class="notif-item">
+                        <div class="ni-icon" style="background:var(--bg);color:var(--txt2)"><i class="fa-solid fa-users"></i></div>
+                        <div style="flex:1">
+                            <div class="ni-title">Họp team IT — 14:00 hôm nay</div>
+                            <div class="ni-desc">Phòng B2, tầng 3. Chủ đề: Sprint review Q1.</div>
+                            <div class="ni-time"><i class="fa-regular fa-clock"></i> 1 ngày trước</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions + Leave Quota -->
+            <div class="card">
+                <div class="card-hd">
+                    <div class="card-title"><i class="fa-solid fa-bolt" style="color:var(--warn);margin-right:6px"></i>Thao tác nhanh</div>
+                </div>
+                <div class="qa-grid">
+                    <a class="qa-btn" href="#"><i class="fa-solid fa-paper-plane" style="color:var(--ok)"></i> Xin nghỉ phép</a>
+                    <a class="qa-btn" href="#"><i class="fa-solid fa-user-pen" style="color:var(--inf)"></i> Cập nhật hồ sơ</a>
+                    <a class="qa-btn" href="#"><i class="fa-solid fa-file-invoice-dollar" style="color:var(--teal)"></i> Xem phiếu lương</a>
+                    <a class="qa-btn" href="#"><i class="fa-solid fa-key" style="color:var(--warn)"></i> Đổi mật khẩu</a>
+                    <a class="qa-btn" href="#"><i class="fa-solid fa-envelope" style="color:var(--pri)"></i> Email nội bộ</a>
+                    <a class="qa-btn" href="#"><i class="fa-solid fa-calendar-days" style="color:var(--err)"></i> Lịch chấm công</a>
+                </div>
+
+                <!-- Leave Quota -->
+                <div style="border-top:1px solid var(--border); padding-top:14px; margin-top:2px">
+                    <div class="card-title" style="font-size:13px; margin-bottom:12px">
+                        <i class="fa-solid fa-umbrella-beach" style="color:var(--inf);margin-right:6px"></i>Quỹ phép năm 2026
+                    </div>
+                    <div class="prg-row">
+                        <div class="prg-lbl"><span>Phép năm</span><span style="color:var(--ok)">8 / 12 ngày</span></div>
+                        <div class="prg-bg"><div class="prg-fill" style="width:33%;background:var(--ok)"></div></div>
+                    </div>
+                    <div class="prg-row">
+                        <div class="prg-lbl"><span>Phép ốm</span><span style="color:var(--inf)">3 / 5 ngày</span></div>
+                        <div class="prg-bg"><div class="prg-fill" style="width:40%;background:var(--inf)"></div></div>
+                    </div>
+                    <div class="prg-row" style="margin-bottom:0">
+                        <div class="prg-lbl"><span>Phép không lương</span><span style="color:var(--warn)">0 / 5 ngày</span></div>
+                        <div class="prg-bg"><div class="prg-fill" style="width:0%;background:var(--warn)"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3: Leave Timeline | Payslip Detail -->
+        <div class="g2">
+
+            <!-- Widget 4: Leave Timeline -->
+            <div class="card">
+                <div class="card-hd">
+                    <div class="card-title"><i class="fa-solid fa-timeline" style="color:var(--teal);margin-right:6px"></i>Đơn phép gần đây</div>
+                    <a class="card-link" href="#">Xem tất cả</a>
+                </div>
+                <div class="leave-list">
+                    <div class="leave-item">
+                        <div class="l-date" style="background:var(--pri-s)">
+                            <div class="day" style="color:var(--pri)">25</div>
+                            <div class="mon" style="color:var(--pri)">Mar</div>
+                        </div>
+                        <div class="l-info">
+                            <div class="l-type">Nghỉ phép năm</div>
+                            <div class="l-dur"><i class="fa-regular fa-calendar"></i> 25/03 → 26/03/2026 &nbsp;·&nbsp; 2 ngày</div>
+                        </div>
+                        <span class="st-badge st-ok">✓ Đã duyệt</span>
+                    </div>
+                    <div class="leave-item">
+                        <div class="l-date" style="background:var(--warn-s)">
+                            <div class="day" style="color:var(--warn)">10</div>
+                            <div class="mon" style="color:var(--warn)">Apr</div>
+                        </div>
+                        <div class="l-info">
+                            <div class="l-type">Nghỉ phép năm</div>
+                            <div class="l-dur"><i class="fa-regular fa-calendar"></i> 10/04 → 12/04/2026 &nbsp;·&nbsp; 3 ngày</div>
+                        </div>
+                        <span class="st-badge st-warn">⏳ Chờ duyệt</span>
+                    </div>
+                    <div class="leave-item">
+                        <div class="l-date" style="background:var(--inf-s)">
+                            <div class="day" style="color:var(--inf)">05</div>
+                            <div class="mon" style="color:var(--inf)">Feb</div>
+                        </div>
+                        <div class="l-info">
+                            <div class="l-type">Nghỉ ốm</div>
+                            <div class="l-dur"><i class="fa-regular fa-calendar"></i> 05/02/2026 &nbsp;·&nbsp; 1 ngày</div>
+                        </div>
+                        <span class="st-badge st-ok">✓ Đã duyệt</span>
+                    </div>
+                    <div class="leave-item">
+                        <div class="l-date" style="background:var(--err-s)">
+                            <div class="day" style="color:var(--err)">15</div>
+                            <div class="mon" style="color:var(--err)">Jan</div>
+                        </div>
+                        <div class="l-info">
+                            <div class="l-type">Nghỉ không lương</div>
+                            <div class="l-dur"><i class="fa-regular fa-calendar"></i> 15/01/2026 &nbsp;·&nbsp; 1 ngày</div>
+                        </div>
+                        <span class="st-badge st-err">✗ Từ chối</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payslip Detail -->
+            <div class="card">
+                <div class="card-hd">
+                    <div class="card-title"><i class="fa-solid fa-receipt" style="color:var(--pri);margin-right:6px"></i>Phiếu lương gần nhất</div>
+                    <a class="card-link" href="#">Lịch sử</a>
+                </div>
+                <div class="ps-month">Tháng 02 / 2026</div>
+                <div class="ps-amount">12,400,000 <small>VNĐ</small></div>
+                <hr style="border:none;border-top:1px solid var(--border);margin:12px 0"/>
+
+                <div class="ps-row"><span class="lbl">Lương cơ bản</span><span class="val">12,000,000đ</span></div>
+                <div class="ps-row"><span class="lbl">Phụ cấp điện thoại</span><span class="val">300,000đ</span></div>
+                <div class="ps-row"><span class="lbl">Phụ cấp ăn trưa</span><span class="val">500,000đ</span></div>
+                <div class="ps-row"><span class="lbl">Phạt đi muộn (1 lần)</span><span class="val neg">− 50,000đ</span></div>
+                <div class="ps-row"><span class="lbl">Thuế TNCN</span><span class="val neg">− 350,000đ</span></div>
+                <hr style="border:none;border-top:2px solid var(--border);margin:8px 0"/>
+                <div class="ps-row" style="font-weight:800;font-size:14px">
+                    <span>Thực nhận</span>
+                    <span style="color:var(--ok)">12,400,000đ</span>
+                </div>
+
+                <button class="ps-dl" onclick="toast('success','fa-file-pdf','Đang tải phiếu lương...','Phiếu lương tháng 02/2026 PDF')">
+                    <i class="fa-solid fa-file-pdf"></i> Tải phiếu lương PDF
+                </button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- Toast -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+    /* DateTime */
+    function tick() {
+        const d = new Date();
+        const days = ['Chủ nhật','Thứ hai','Thứ ba','Thứ tư','Thứ năm','Thứ sáu','Thứ bảy'];
+        document.getElementById('dateTime').textContent =
+            days[d.getDay()] + ', ' +
+            String(d.getDate()).padStart(2,'0') + '/' +
+            String(d.getMonth()+1).padStart(2,'0') + '/' +
+            d.getFullYear() + ' — ' +
+            String(d.getHours()).padStart(2,'0') + ':' +
+            String(d.getMinutes()).padStart(2,'0');
+    }
+    tick(); setInterval(tick, 1000);
+
+    /* Check-in / Check-out */
+    function doCheckin() {
+        const now = new Date();
+        const t = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+        document.getElementById('btnIn').style.display = 'none';
+        document.getElementById('btnOut').style.display = 'flex';
+        document.getElementById('ciStatus').textContent = 'Đã check-in lúc ' + t;
+        toast('success','fa-circle-check','Check-in thành công!','Đã ghi nhận lúc ' + t);
+    }
+    function doCheckout() {
+        const now = new Date();
+        const t = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+        document.getElementById('btnOut').style.display = 'none';
+        document.getElementById('ciStatus').textContent = 'Đã check-out lúc ' + t;
+        toast('success','fa-door-open','Check-out thành công!','Chúc buổi tối vui vẻ! 🎉');
+    }
+
+    /* Toast */
+    const COLORS = { success:'var(--ok)', info:'var(--inf)', warn:'var(--warn)', err:'var(--err)' };
+    function toast(type, icon, title, msg) {
+        const w = document.getElementById('toastWrap');
+        const el = document.createElement('div');
+        el.className = 'toast';
+        el.innerHTML = `<i class="fa-solid ${icon}" style="color:${COLORS[type]||COLORS.success};font-size:17px"></i>
+      <div><div style="font-weight:700;color:var(--txt)">${title}</div>
+      <div style="font-size:12px;color:var(--txt2)">${msg}</div></div>`;
+        w.appendChild(el);
+        setTimeout(() => el.remove(), 3500);
+    }
+
+    /* Attendance Bar Chart */
+    new Chart(document.getElementById('attChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['Th10', 'Th11', 'Th12', 'Th1', 'Th2', 'Th3'],
+            datasets: [
+                { label:'Có mặt',  data:[21,20,19,22,18,18], backgroundColor:'#10B981', borderRadius:5, borderSkipped:false },
+                { label:'Đi muộn', data:[1,2,0,1,3,2],        backgroundColor:'#F59E0B', borderRadius:5, borderSkipped:false },
+                { label:'Vắng',    data:[0,0,3,0,1,2],         backgroundColor:'#EF4444', borderRadius:5, borderSkipped:false }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { font:{ family:'Nunito', size:11 }, usePointStyle:true, pointStyleWidth:8 }
+                }
+            },
+            scales: {
+                x: { grid:{ display:false }, ticks:{ font:{ family:'Nunito', size:11 } } },
+                y: {
+                    grid:{ color:'#f0f0f0' },
+                    ticks:{ font:{ family:'Nunito', size:11 }, stepSize:5 },
+                    min:0, max:25
+                }
+            }
+        }
+    });
+</script>
+</body>
+</html>
