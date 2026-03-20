@@ -4,76 +4,77 @@
     <meta charset="UTF-8">
     <title>Home Page - HRM System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { display: flex; min-height: 100vh; background-color: #f8f9fa; }
+        .sidebar { width: 260px; background: #212529; color: white; flex-shrink: 0; }
+        .sidebar a { color: rgba(255,255,255,0.7); text-decoration: none; padding: 12px 20px; display: block; transition: 0.3s; }
+        .sidebar a:hover, .sidebar a.active { background: #343a40; color: white; border-left: 4px solid #0d6efd; }
+        .main-content { flex-grow: 1; padding: 20px; }
+        .nav-header { font-size: 0.75rem; text-uppercase: uppercase; color: #6c757d; padding: 15px 20px 5px; font-weight: bold; }
+    </style>
 </head>
-<body class="bg-light">
+<body>
 
-<nav class="navbar navbar-dark bg-primary shadow">
-    <div class="container">
-        <span class="navbar-brand mb-0 h1">HRM System</span>
-        <button class="btn btn-danger btn-sm" onclick="logout()">Đăng xuất</button>
-    </div>
-</nav>
+<div class="sidebar d-flex flex-column shadow">
+    <div class="p-3 text-center"><h4 class="text-primary fw-bold">HRM System</h4><small class="text-muted">Management Console</small></div>
+    <hr>
+    <a href="/home" class="active">🏠 Trang Chủ</a>
+    <div class="nav-header">Cơ cấu tổ chức</div>
+    <a href="/chi-nhanh">🏢 Chi Nhánh</a>
+    <a href="/phong-ban">📂 Phòng Ban</a>
+    <a href="/nhom">👥 Nhóm / Tổ</a>
+    <a href="/quan-ly-chuc-vu">🎖️ Chức Vụ</a>
+    <div class="nav-header">Nhân sự</div>
+    <a href="/quan-ly-nhan-vien">📋 Danh Sách NV</a>
+    <a href="/them-nhan-vien">➕ Thêm Mới</a>
+    <a href="/ban-hanh-quyet-dinh">📜 Ban Hành QĐ</a>
+    <hr class="mt-auto">
+    <a href="#" onclick="logout()" class="text-danger fw-bold">🚪 Đăng Xuất</a>
+</div>
 
-<div class="container mt-5">
-    <div class="card shadow p-4">
-        <h1 id="welcomeMessage">Đang tải dữ liệu...</h1>
-        <hr>
-        <div id="profileDetails" style="display: none;">
-            <p><strong>Mã nhân viên:</strong> <span id="empId"></span></p>
-            <p><strong>Họ và tên:</strong> <span id="empName"></span></p>
-            <p><strong>Email công việc:</strong> <span id="empEmail"></span></p>
-            <p><strong>Vai trò hệ thống:</strong> <span class="badge bg-success" id="empRole"></span></p>
+<div class="main-content">
+    <div class="container-fluid">
+        <div class="card shadow-sm border-0 p-4 mt-4">
+            <h1 id="welcomeMessage" class="text-primary">Đang tải dữ liệu...</h1>
+            <hr>
+            <div id="profileDetails" style="display: none;">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Mã nhân viên:</strong> <span id="empId" class="badge bg-light text-dark border"></span></p>
+                        <p><strong>Họ và tên:</strong> <span id="empName"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Email công việc:</strong> <span id="empEmail"></span></p>
+                        <p><strong>Vai trò:</strong> <span class="badge bg-success" id="empRole"></span></p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // 1. Kiểm tra xem đã đăng nhập chưa
     const token = localStorage.getItem('token');
-    if (!token) {
-        window.location.href = '/login'; // Không có token thì mời ra ngoài
-    }
+    if (!token) window.location.href = '/login';
 
-    // 2. Gọi API lấy thông tin Profile khi trang web load xong
     async function loadProfile() {
         try {
             const response = await fetch('/api/profile/me', {
-                method: 'GET',
-                headers: {
-                    'Authorization': 'Bearer ' + token, // Đính kèm token vào Header
-                    'Content-Type': 'application/json'
-                }
+                headers: { 'Authorization': 'Bearer ' + token }
             });
-
             if (response.ok) {
                 const nv = await response.json();
-                const role = localStorage.getItem('role');
-
-                // Hiển thị dữ liệu lên giao diện
                 document.getElementById('welcomeMessage').innerText = "Chào mừng, " + nv.hoTen + "!";
                 document.getElementById('empId').innerText = nv.id;
                 document.getElementById('empName').innerText = nv.hoTen;
                 document.getElementById('empEmail').innerText = nv.emailCongViec;
-                document.getElementById('empRole').innerText = role;
+                document.getElementById('empRole').innerText = localStorage.getItem('role');
                 document.getElementById('profileDetails').style.display = 'block';
-            } else {
-                // Nếu token hết hạn hoặc sai, bắt đăng nhập lại
-                logout();
-            }
-        } catch (error) {
-            console.error("Lỗi:", error);
-            logout();
-        }
+            } else { logout(); }
+        } catch (error) { logout(); }
     }
-
-    // 3. Hàm đăng xuất
-    function logout() {
-        localStorage.clear(); // Xóa sạch token, role, username
-        window.location.href = '/login';
-    }
-
-    // Chạy hàm load thông tin
-    loadProfile();
+    function logout() { localStorage.clear(); window.location.href = '/login'; }
+    window.onload = loadProfile;
 </script>
 </body>
 </html>
