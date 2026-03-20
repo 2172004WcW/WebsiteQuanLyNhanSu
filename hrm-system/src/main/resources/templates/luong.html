@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản Lý Lương - HRM PRO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { display: flex; min-height: 100vh; background-color: #f4f7f6; }
+        .sidebar { width: 260px; background: #2c3e50; color: white; flex-shrink: 0; }
+        .sidebar a { color: #bdc3c7; text-decoration: none; padding: 12px 20px; display: block; transition: 0.3s; }
+        .sidebar a:hover, .sidebar a.active { background: #34495e; color: white; border-left: 4px solid #3498db; }
+        .main-content { flex-grow: 1; padding: 30px; overflow-y: auto; }
+        .nav-header { font-size: 0.75rem; text-transform: uppercase; color: #7f8c8d; padding: 15px 20px 5px; font-weight: bold; }
+        
+        .card { border: none; border-radius: 10px; }
+        .nav-tabs .nav-link { color: #7f8c8d; font-weight: 500; }
+        .nav-tabs .nav-link.active { color: #3498db; border-bottom: 3px solid #3498db; }
+        .status-paid { color: #2ecc71; font-weight: bold; }
+        .status-pending { color: #f39c12; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar shadow">
+    <div class="p-4 text-center"><h4 class="text-white">HRM PRO</h4><small class="text-muted">Admin Panel</small></div>
+    <hr class="mx-3 opacity-25">
+    <a href="/home">🏠 Trang Chủ</a>
+    <div class="nav-header">Tổ chức</div>
+    <a href="/chi-nhanh">🏢 Chi Nhánh</a>
+    <a href="/phong-ban">📂 Phòng Ban</a>
+    <a href="/nhom">👥 Nhóm / Tổ</a>
+    <a href="/quan-ly-chuc-vu">🎖️ Chức Vụ</a>
+    <div class="nav-header">Nhân sự</div>
+    <a href="/quan-ly-nhan-vien">📋 Danh Sách NV</a>
+    <a href="/them-nhan-vien">➕ Onboarding</a>
+    <a href="/luong" class="active">💰 Quản Lý Lương</a> 
+    <a href="/ban-hanh-quyet-dinh">📜 Quyết Định</a>
+    <hr class="mx-3 opacity-25 mt-auto">
+    <a href="#" onclick="logout()" class="text-danger">🚪 Đăng xuất</a>
+</div>
+
+<div class="main-content">
+    <div class="mb-4">
+        <h3 class="text-primary fw-bold">💰 Quản Lý Lương Nhân Sự</h3>
+        <p class="text-muted">Thiết lập cấu trúc, tính toán lương và quản lý thanh toán.</p>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <ul class="nav nav-tabs mb-4" id="salaryTab" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" id="struct-tab" data-bs-toggle="tab" data-bs-target="#struct" type="button">1. Thiết lập Cấu trúc</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" id="calc-tab" data-bs-toggle="tab" data-bs-target="#calc" type="button">2. Tính toán & Quét dữ liệu</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" id="payslip-tab" data-bs-toggle="tab" data-bs-target="#payslip" type="button">3. Phiếu lương & Thanh toán</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="salaryTabContent">
+                
+                <div class="tab-pane fade show active" id="struct" role="tabpanel">
+                    <h5 class="mb-3"><i class="fas fa-user-tag text-primary"></i> Lương theo Chức Vụ</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover border">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Chức vụ</th>
+                                    <th>Lương cơ bản (VNĐ)</th>
+                                    <th>Phụ cấp định mức (VNĐ)</th>
+                                    <th class="text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="structureTable">
+                                <tr>
+                                    <td class="fw-bold">Trưởng phòng</td>
+                                    <td><input type="number" class="form-control form-control-sm w-75" value="15000000" id="base_1"></td>
+                                    <td><input type="number" class="form-control form-control-sm w-75" value="3000000" id="allow_1"></td>
+                                    <td class="text-center"><button class="btn btn-primary btn-sm px-3" onclick="saveStructure(1)">Lưu</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="calc" role="tabpanel">
+                    <div class="alert alert-light border shadow-sm d-flex align-items-center">
+                        <i class="fas fa-info-circle text-info me-3 fs-4"></i>
+                        <div>Hệ thống sẽ tự động tổng hợp dữ liệu <strong>Chấm công</strong> và <strong>Nghỉ phép</strong> của tháng được chọn.</div>
+                    </div>
+                    <div class="row g-3 align-items-center mb-4">
+                        <div class="col-auto"><label class="fw-bold">Tháng quyết toán:</label></div>
+                        <div class="col-auto"><input type="month" class="form-control" id="payrollMonth"></div>
+                        <div class="col-auto"><button class="btn btn-success fw-bold" onclick="runPayroll()"><i class="fas fa-calculator me-2"></i>Chốt Lương</button></div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped border">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Nhân viên</th>
+                                    <th>Thu nhập (Gồm PC)</th>
+                                    <th>Phạt đi muộn</th>
+                                    <th>Nghỉ KP</th>
+                                    <th class="text-end">Thực lĩnh</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payrollResults">
+                                <tr><td colspan="5" class="text-center text-muted italic">Chọn tháng và nhấn "Chốt Lương" để xem kết quả.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="payslip" role="tabpanel">
+                    <h5 class="mb-3"><i class="fas fa-credit-card text-primary"></i> Trạng thái thanh toán</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Mã Phiếu</th>
+                                    <th>Nhân viên</th>
+                                    <th>Tháng</th>
+                                    <th>Số tiền</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payslipTable">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div> </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // 1. API Thiết lập lương
+    function saveStructure(posId) {
+        const base = document.getElementById(`base_${posId}`).value;
+        const allow = document.getElementById(`allow_${posId}`).value;
+        alert("Đã cập nhật mức lương cho Chức vụ ID: " + posId);
+    }
+
+    // 2 & 3. Logic Tính Lương
+    function runPayroll() {
+        const month = document.getElementById('payrollMonth').value;
+        if(!month) return alert("Vui lòng chọn tháng!");
+
+        const mockData = [
+            { name: "Nguyễn Văn A", base: 15000000, allow: 2000000, lateMin: 30, unpaidDay: 1 },
+            { name: "Trần Thị B", base: 10000000, allow: 1000000, lateMin: 0, unpaidDay: 0 }
+        ];
+
+        let html = '';
+        document.getElementById('payslipTable').innerHTML = ''; // Clear cũ
+
+        mockData.forEach((item, index) => {
+            const fineLate = item.lateMin * 2000;
+            const fineLeave = Math.floor((item.base / 26) * item.unpaidDay);
+            const netSalary = (item.base + item.allow) - fineLate - fineLeave;
+
+            html += `<tr>
+                <td><strong>${item.name}</strong></td>
+                <td>${(item.base + item.allow).toLocaleString()}</td>
+                <td><small class="text-danger">-${fineLate.toLocaleString()}</small></td>
+                <td><small class="text-danger">-${fineLeave.toLocaleString()}</small></td>
+                <td class="text-end fw-bold text-primary">${netSalary.toLocaleString()} VNĐ</td>
+            </tr>`;
+            
+            addToPayslip(item.name, month, netSalary, index);
+        });
+
+        document.getElementById('payrollResults').innerHTML = html;
+    }
+
+    // 4. Quản lý Phiếu lương
+    function addToPayslip(name, month, total, id) {
+        const table = document.getElementById('payslipTable');
+        const row = `<tr>
+            <td><code>PS-${id}${month.replace('-','')}</code></td>
+            <td>${name}</td>
+            <td>${month}</td>
+            <td class="fw-bold">${total.toLocaleString()}</td>
+            <td id="status-${id}" class="status-pending"><span class="badge bg-warning text-dark">Chờ duyệt</span></td>
+            <td class="text-center">
+                <button class="btn btn-outline-success btn-sm" onclick="paySalary(${id})">
+                    <i class="fas fa-check-circle"></i> Trả lương
+                </button>
+            </td>
+        </tr>`;
+        table.innerHTML += row;
+    }
+
+    function paySalary(id) {
+        if(confirm("Xác nhận đã thanh toán lương cho nhân viên này?")) {
+            const statusCell = document.getElementById(`status-${id}`);
+            statusCell.innerHTML = `<span class="badge bg-success">Đã thanh toán</span>`;
+            statusCell.className = "status-paid";
+        }
+    }
+
+    function logout() { localStorage.clear(); window.location.href = '/login'; }
+</script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh Sách Nhân Viên - HRM System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { display: flex; min-height: 100vh; background-color: #f4f7f6; }
+        .sidebar { width: 260px; background: #2c3e50; color: white; flex-shrink: 0; }
+        .sidebar a { color: #bdc3c7; text-decoration: none; padding: 12px 20px; display: block; transition: 0.3s; }
+        .sidebar a:hover, .sidebar a.active { background: #34495e; color: white; border-left: 4px solid #3498db; }
+        .main-content { flex-grow: 1; padding: 30px; }
+        .nav-header { font-size: 0.75rem; text-uppercase: uppercase; color: #7f8c8d; padding: 15px 20px 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar shadow">
+    <div class="p-4 text-center"><h4 class="text-white">HRM PRO</h4><small class="text-muted">Admin Panel</small></div>
+    <hr class="mx-3 opacity-25">
+    <a href="/home">🏠 Trang Chủ</a>
+    <div class="nav-header">Tổ chức</div>
+    <a href="/chi-nhanh">🏢 Chi Nhánh</a>
+    <a href="/phong-ban">📂 Phòng Ban</a>
+    <a href="/nhom">👥 Nhóm / Tổ</a>
+    <a href="/quan-ly-chuc-vu">🎖️ Chức Vụ</a>
+    <div class="nav-header">Nhân sự</div>
+    <a href="/quan-ly-nhan-vien" class="active">📋 Danh Sách NV</a>
+    <a href="/them-nhan-vien">➕ Onboarding</a>
+    <a href="/ban-hanh-quyet-dinh">📜 Quyết Định</a>
+    <hr class="mx-3 opacity-25 mt-auto">
+    <a href="#" onclick="logout()" class="text-danger">🚪 Đăng xuất</a>
+</div>
+
+<div class="main-content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-primary fw-bold">📋 Danh Sách Nhân Viên</h3>
+        <a href="/them-nhan-vien" class="btn btn-primary fw-bold shadow-sm">+ Thêm Nhân Viên</a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Mã NV</th>
+                        <th>Họ và Tên</th>
+                        <th>Email</th>
+                        <th>Phòng Ban</th>
+                        <th>Chức Vụ</th>
+                        <th>Trạng Thái</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    <tr><td colspan="7" class="text-center">Đang tải dữ liệu...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const token = localStorage.getItem('token') || '';
+    const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+
+    function loadNhanVien() {
+        fetch('/api/employees', { headers })
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Chưa có nhân viên nào.</td></tr>';
+                return;
+            }
+
+            data.forEach(nv => {
+                const statusBadge = nv.trangThaiHoatDong === 'DANG_LAM_VIEC'
+                    ? '<span class="badge bg-success">Đang làm việc</span>'
+                    : `<span class="badge bg-secondary">${nv.trangThaiHoatDong}</span>`;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${nv.id}</strong></td>
+                        <td>${nv.hoTen}</td>
+                        <td>${nv.emailCongViec}</td>
+                        <td>${nv.phongBan ? nv.phongBan.tenPhongBan : '<span class="text-muted">N/A</span>'}</td>
+                        <td>${nv.chucVu ? nv.chucVu.tenChucVu : '<span class="text-muted">N/A</span>'}</td>
+                        <td>${statusBadge}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-primary shadow-sm" onclick="xemChiTiet('${nv.id}')">Sửa / Xem</button>
+                        </td>
+                    </tr>`;
+            });
+        })
+        .catch(err => console.error("Lỗi:", err));
+    }
+
+    function xemChiTiet(id) {
+        window.location.href = `/ho-so-nhan-vien?id=${id}`;
+    }
+
+    function logout() { localStorage.clear(); window.location.href = '/login'; }
+    window.onload = loadNhanVien;
+</script>
+</body>
+</html>
