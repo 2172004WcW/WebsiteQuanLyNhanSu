@@ -85,4 +85,9 @@ public class NhanVien {
     @com.fasterxml.jackson.annotation.JsonIgnore
     @ToString.Exclude
     private TaiKhoan taiKhoan;
+
+    public BangLuong getBangLuong() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getBangLuong'");
+    }
 }
