@@ -2,7 +2,12 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+<<<<<<< HEAD
+      <module fileurl="file://$PROJECT_DIR$/.idea/WebsiteQuanLyNhanSu.iml" filepath="$PROJECT_DIR$/.idea/WebsiteQuanLyNhanSu.iml" />
+      <module fileurl="file://$PROJECT_DIR$/hrm-system/hrm-system.iml" filepath="$PROJECT_DIR$/hrm-system/hrm-system.iml" />
+=======
       <module fileurl="file://$PROJECT_DIR$/.idea/hrm-system.iml" filepath="$PROJECT_DIR$/.idea/hrm-system.iml" />
+>>>>>>> 82da3ed1e9cb1a2e622f694fba7a346d8aab52a4
     </modules>
   </component>
 </project>
