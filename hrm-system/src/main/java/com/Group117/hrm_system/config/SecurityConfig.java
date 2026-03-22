@@ -55,7 +55,11 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         // Mở toang cửa cho API Login và tài nguyên tĩnh
+<<<<<<< HEAD
                         .requestMatchers("/api/auth/**", "/login", "/", "/home","/quan-ly-chuc-vu","/them-nhan-vien","/phong-ban","/quan-ly-nhan-vien","/chi-nhanh", "/nhom","/ban-hanh-quyet-dinh","/ho-so-nhan-vien", "/css/**", "/js/**", "/favicon.ico").permitAll()
+=======
+                        .requestMatchers("/api/auth/**", "/login", "/", "/home", "/css/**", "/js/**", "/favicon.ico").permitAll()
+>>>>>>> 82da3ed1e9cb1a2e622f694fba7a346d8aab52a4
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
