@@ -3,22 +3,16 @@ package com.Group117.hrm_system.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
-<<<<<<< HEAD
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
-=======
->>>>>>> 82da3ed1e9cb1a2e622f694fba7a346d8aab52a4
 import java.util.Date;
 
 @Entity
 @Table(name = "nhan_vien")
 @Data
-<<<<<<< HEAD
 @SQLDelete(sql = "UPDATE nhan_vien SET trang_thai_hoat_dong = 'DA_NGHI_VIEC' WHERE id = ?")
 @SQLRestriction("trang_thai_hoat_dong != 'DA_NGHI_VIEC'")
-=======
->>>>>>> 82da3ed1e9cb1a2e622f694fba7a346d8aab52a4
 public class NhanVien {
     @Id
     private String id; // primary key
@@ -56,31 +50,28 @@ public class NhanVien {
     @Column(name = "ngay_vao_lam")
     private Date ngayVaoLam;
 
-<<<<<<< HEAD
+    @Column(name = "so_ngay_phep_con_lai")
+    private Integer soNgayPhepConLai = 12; // Mặc định mỗi nhân viên có 12 ngày phép/năm
+
     // Trạng thái cho Soft Delete (DANG_LAM_VIEC, DA_NGHI_VIEC)
     @Column(name = "trang_thai_hoat_dong")
     private String trangThaiHoatDong = "DANG_LAM_VIEC";
-=======
-    @Column(name = "trang_thai_hoat_dong")
-    private String trangThaiHoatDong;
 
-    @Column(name = "phong_ban_id")
+    @Column(name = "phong_ban_id", insertable = false, updatable = false)
     private String phongBanId;
 
-    @Column(name = "nhom_id")
+    @Column(name = "nhom_id", insertable = false, updatable = false)
     private String nhomId;
 
-    @Column(name = "chuc_vu_id")
+    @Column(name = "chuc_vu_id", insertable = false, updatable = false)
     private String chucVuId;
 
-    @Column(name = "nguoi_quan_ly_truoc_tiep_id")
+    @Column(name = "nguoi_quan_ly_truoc_tiep_id", insertable = false, updatable = false)
     private String nguoiQuanLyTruocTiepId;
->>>>>>> 82da3ed1e9cb1a2e622f694fba7a346d8aab52a4
 
     @Column(name = "he_so_luong")
     private Float heSoLuong;
 
-<<<<<<< HEAD
     // --- MAPPING VỚI TỔ CHỨC ---
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "phong_ban_id")
@@ -111,12 +102,6 @@ public class NhanVien {
     private TaiKhoan taiKhoan;
 
     public BangLuong getBangLuong() {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getBangLuong'");
     }
-=======
-    @OneToOne(mappedBy = "nhanVien")
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    private TaiKhoan taiKhoan;
->>>>>>> 82da3ed1e9cb1a2e622f694fba7a346d8aab52a4
 }
