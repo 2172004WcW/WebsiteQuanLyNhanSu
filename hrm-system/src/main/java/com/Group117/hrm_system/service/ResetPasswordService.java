@@ -3,11 +3,11 @@ package com.Group117.hrm_system.service;
 import com.Group117.hrm_system.entity.TaiKhoan;
 import com.Group117.hrm_system.Repository.TaiKhoanRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.MailSendException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Service
 public class ResetPasswordService {
@@ -34,6 +34,9 @@ public class ResetPasswordService {
 
             // 3. Gửi mail
             String emailNhanVien = tk.getNhanVien().getEmailCongViec();
+            if (emailNhanVien == null || emailNhanVien.isBlank()) {
+                return false;
+            }
             sendResetToken(emailNhanVien, token);
             return true;
         }
@@ -49,8 +52,8 @@ public class ResetPasswordService {
 
         try {
             mailSender.send(message);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (MailSendException e) {
+            System.err.println("Lỗi gửi mail: " + e.getMessage());
         }
     }
 }

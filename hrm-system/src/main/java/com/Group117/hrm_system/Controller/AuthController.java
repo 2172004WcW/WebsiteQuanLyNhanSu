@@ -79,12 +79,43 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
         String username = request.get("username");
-        boolean isProcessed = resetPasswordService.processForgotPassword(username);
+        // Không tiết lộ tài khoản có tồn tại hay không
+        try {
+            resetPasswordService.processForgotPassword(username);
+        } catch (Exception ignored) { }
+        return ResponseEntity.ok(Map.of("message", "Nếu tài khoản tồn tại, mã OTP đã được gửi."));
+    }
 
-        if (isProcessed) {
-            return ResponseEntity.ok(Map.of("message", "Mã xác nhận đã được gửi đến email của bạn."));
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+        String username = request.get("username");
+        String otp = request.get("otp");
+        String newPassword = request.get("newPassword");
+
+        if (username == null || username.isBlank() ||
+                otp == null || otp.isBlank() ||
+                newPassword == null || newPassword.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Thiếu thông tin bắt buộc."));
         }
-        return ResponseEntity.status(404).body(Map.of("message", "Không tìm thấy tài khoản hoặc email hợp lệ."));
+
+        if (newPassword.length() < 6) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Mật khẩu mới tối thiểu 6 ký tự."));
+        }
+
+        TaiKhoan tk = taiKhoanRepository.findByUsername(username);
+        if (tk == null ||
+                tk.getResetToken() == null ||
+                tk.getResetTokenExpiry() == null ||
+                !tk.getResetToken().equals(otp) ||
+                !tk.getResetTokenExpiry().isAfter(LocalDateTime.now())) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Mã OTP không hợp lệ hoặc đã hết hạn."));
+        }
+
+        tk.setPassword(passwordEncoder.encode(newPassword));
+        tk.setResetToken(null);
+        tk.setResetTokenExpiry(null);
+        taiKhoanRepository.save(tk);
+        return ResponseEntity.ok(Map.of("message", "Mật khẩu đã được đặt lại thành công."));
     }
 
     // 3. API XÁC NHẬN MÃ VÀ ĐỔI MẬT KHẨU MỚI - Giữ nguyên logic cũ
@@ -94,6 +125,16 @@ public class AuthController {
         String username = request.get("username");
         String token = request.get("token"); // Nhận token từ frontend
         String newPassword = request.get("newPassword");
+
+        if (username == null || username.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Thiếu username"));
+        }
+        if (token == null || token.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Thiếu token"));
+        }
+        if (newPassword == null || newPassword.isBlank() || newPassword.length() < 6) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Mật khẩu tối thiểu 6 ký tự"));
+        }
 
         TaiKhoan tk = taiKhoanRepository.findByUsername(username);
 

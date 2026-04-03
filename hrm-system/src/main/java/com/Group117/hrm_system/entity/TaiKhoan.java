@@ -3,6 +3,7 @@ package com.Group117.hrm_system.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 public class TaiKhoan {
 
     @Id
-    @Column(name = "ma_tai_khoan") // Nếu ông dùng ten_dang_nhap làm PK thì đổi tên field này
+    @Column(name = "ma_tai_khoan") 
     private String maTaiKhoan;
 
     @Column(name = "username", unique = true, nullable = false)
@@ -31,6 +32,10 @@ public class TaiKhoan {
 
     @Column(name = "trang_thai_tai_khoan")
     private boolean trangThaiTaiKhoan = true; // Mặc định là true (đang hoạt động)
+
+    /** Ghi nhận khi tạo tài khoản (quản trị); bản ghi cũ có thể null */
+    @Column(name = "ngay_tao")
+    private LocalDateTime ngayTao;
 
     @OneToOne
     @JoinColumn(name = "id_nhan_vien", referencedColumnName = "id")

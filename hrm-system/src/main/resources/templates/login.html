@@ -209,23 +209,19 @@
             if (response.ok) {
                 // ── Lưu token vào 2 nơi ──
 
-                // 1. localStorage — dùng cho Fetch/Axios API calls trong các page
-                localStorage.setItem('token',    data.token);
-                localStorage.setItem('role',     data.role);
-                localStorage.setItem('username', data.username);
-
-                // 2. Cookie — browser tự gửi khi navigate URL (Thymeleaf pages)
-                //    Không đặt HttpOnly vì JS cần đọc được
-                //    SameSite=Strict: chống CSRF
-                //    Max-Age=86400: hết hạn sau 24 giờ (khớp với JWT TTL)
-                const maxAge = 24 * 60 * 60;
-                document.cookie = `jwt_token=${data.token}; path=/; SameSite=Strict; Max-Age=${maxAge}`;
+                // 1) sessionStorage — mỗi tab trình duyệt có bộ nhớ riêng, tránh bị tab khác ghi đè
+                sessionStorage.setItem('token', data.token);
+                sessionStorage.setItem('role', data.role);
+                sessionStorage.setItem('username', data.username);
 
                 console.log('>>> Đăng nhập thành công, role:', data.role);
 
                 // ── Điều hướng theo role ──
                 const destination = ROLE_ROUTES[data.role] || '/dashboard/employee';
-                window.location.href = destination;
+                // Truyền token qua URL để SSR /dashboard đọc đúng token khi refresh (F5)
+                const url = new URL(destination, window.location.origin);
+                url.searchParams.set('access_token', data.token);
+                window.location.href = url.toString();
 
             } else {
                 // Server trả lỗi (401, 400...)
@@ -261,23 +257,25 @@
 
     // Nếu đã có token hợp lệ trong localStorage → redirect luôn, không cần login lại
     (function checkExistingSession() {
-        const token = localStorage.getItem('token');
-        const role  = localStorage.getItem('role');
+        const token = sessionStorage.getItem('token');
+        const role  = sessionStorage.getItem('role');
         if (token && token !== 'null' && token !== 'undefined' && role) {
             try {
                 const payload   = JSON.parse(atob(token.split('.')[1]));
                 const isExpired = payload.exp * 1000 < Date.now();
                 if (!isExpired) {
                     const destination = ROLE_ROUTES[role] || '/dashboard/employee';
-                    window.location.href = destination;
+                    const url = new URL(destination, window.location.origin);
+                    url.searchParams.set('access_token', token);
+                    window.location.href = url.toString();
                 } else {
                     // Token hết hạn → xóa storage và cookie
-                    localStorage.clear();
+                    sessionStorage.clear();
                     document.cookie = 'jwt_token=; path=/; Max-Age=0';
                 }
             } catch (e) {
                 // Token lỗi format → xóa
-                localStorage.clear();
+                sessionStorage.clear();
                 document.cookie = 'jwt_token=; path=/; Max-Age=0';
             }
         }

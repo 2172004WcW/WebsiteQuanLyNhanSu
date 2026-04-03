@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -18,6 +19,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.Group117.hrm_system.Repository.TaiKhoanRepository;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 @EnableWebSecurity
@@ -77,20 +79,26 @@ public class SecurityConfig {
                 // ── Exception Handling ────────────────────────────────────
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
-                            // API call → trả 401 JSON
-                            // Page request → redirect login (xử lý bên Controller)
-                            if (request.getRequestURI().startsWith("/api/")) {
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Chưa xác thực");
-                            } else {
-                                response.sendRedirect("/login?error=unauthorized");
+                            // API call → luôn trả JSON 401 (KHÔNG redirect)
+                            if (request.getRequestURI() != null && request.getRequestURI().startsWith("/api/")) {
+                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+                                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                                response.getWriter().write("{\"message\":\"Chưa xác thực\"}");
+                                return;
                             }
+                            // Page request → redirect login
+                            response.sendRedirect("/login?error=unauthorized");
                         })
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            if (request.getRequestURI().startsWith("/api/")) {
-                                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Không đủ quyền");
-                            } else {
-                                response.sendRedirect("/login?error=forbidden");
+                            if (request.getRequestURI() != null && request.getRequestURI().startsWith("/api/")) {
+                                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+                                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                                response.getWriter().write("{\"message\":\"Không đủ quyền\"}");
+                                return;
                             }
+                            response.sendRedirect("/login?error=forbidden");
                         })
                 )
 
@@ -106,8 +114,11 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/login", "/", "/home",
+                                "/forgot-password", "/forgot-password/sent", "/reset-password",
                                 "/css/**", "/js/**", "/images/**",
-                                "/webjars/**", "/favicon.ico"
+                                "/uploads/**",
+                                "/webjars/**", "/favicon.ico",
+                                "/ws/**"
                         ).permitAll()
 
                         // Preflight OPTIONS — luôn permit
